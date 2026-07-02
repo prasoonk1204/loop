@@ -1,6 +1,6 @@
 "use client";
 
-import { requestAccess, signTransaction } from "@stellar/freighter-api";
+import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk";
 import {
   Asset,
   Memo,
@@ -8,13 +8,18 @@ import {
   StrKey,
   TransactionBuilder
 } from "@stellar/stellar-sdk";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   STELLAR_NETWORK_PASSPHRASE,
   formatXlmBalance,
   horizonServer,
   nativeBalance
 } from "@/lib/stellar";
+import {
+  getConnectedWalletName,
+  getSupportedWallets,
+  initWalletKit
+} from "@/lib/walletkit";
 
 type SendState = {
   kind: "idle" | "loading" | "success" | "error";
@@ -22,12 +27,38 @@ type SendState = {
   hash?: string;
 };
 
+function walletLabel(name: string) {
+  return name || "Wallet";
+}
+
+function toMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Unknown wallet error";
+}
+
+function isTxRejected(error: unknown) {
+  const message = toMessage(error).toLowerCase();
+  const code = typeof error === "object" && error && "code" in error ? (error as { code?: number }).code : undefined;
+  return code === -1 || message.includes("closed the modal") || message.includes("reject") || message.includes("cancel");
+}
+
+function isInsufficientBalance(error: unknown) {
+  const message = toMessage(error).toLowerCase();
+  const response = error as {
+    response?: { data?: { extras?: { result_codes?: { transaction?: string } } } };
+  };
+  const transactionCode = response.response?.data?.extras?.result_codes?.transaction;
+
+  return transactionCode === "tx_insufficient_balance" || message.includes("tx_insufficient_balance");
+}
+
 export function WalletDashboard() {
   const [publicKey, setPublicKey] = useState("");
+  const [walletName, setWalletName] = useState("");
   const [balance, setBalance] = useState("0");
   const [loadingWallet, setLoadingWallet] = useState(false);
   const [destination, setDestination] = useState("");
   const [amount, setAmount] = useState("1");
+  const [supportedWallets, setSupportedWallets] = useState<string[]>([]);
   const [sendState, setSendState] = useState<SendState>({
     kind: "idle",
     message: ""
@@ -35,6 +66,14 @@ export function WalletDashboard() {
 
   const connected = Boolean(publicKey);
   const balanceLabel = useMemo(() => formatXlmBalance(balance), [balance]);
+
+  useEffect(() => {
+    initWalletKit();
+    void (async () => {
+      const wallets = await getSupportedWallets();
+      setSupportedWallets(wallets.filter((wallet) => wallet.isAvailable).map((wallet) => wallet.name));
+    })();
+  }, []);
 
   async function refreshBalance(address: string) {
     const account = await horizonServer.loadAccount(address);
@@ -46,20 +85,30 @@ export function WalletDashboard() {
     setSendState({ kind: "idle", message: "" });
 
     try {
-      const { address, error } = await requestAccess();
-      if (error) {
-        throw new Error(error.message);
+      const wallets = await getSupportedWallets();
+      const availableWallets = wallets.filter((wallet) => wallet.isAvailable);
+      setSupportedWallets(availableWallets.map((wallet) => wallet.name));
+
+      if (!availableWallets.length) {
+        setSendState({
+          kind: "error",
+          message: "Wallet not found. Install Freighter, xBull, or another supported Stellar wallet."
+        });
+        return;
       }
+
+      const { address } = await StellarWalletsKit.authModal();
       if (!address) {
-        throw new Error("Freighter did not return an address");
+        throw new Error("Wallet did not return an address");
       }
 
       setPublicKey(address);
+      setWalletName(walletLabel(getConnectedWalletName()));
       await refreshBalance(address);
     } catch (error) {
       setSendState({
         kind: "error",
-        message: error instanceof Error ? error.message : "Wallet connect failed"
+        message: toMessage(error)
       });
     } finally {
       setLoadingWallet(false);
@@ -67,7 +116,9 @@ export function WalletDashboard() {
   }
 
   function disconnectWallet() {
+    void StellarWalletsKit.disconnect();
     setPublicKey("");
+    setWalletName("");
     setBalance("0");
     setDestination("");
     setAmount("1");
@@ -112,14 +163,13 @@ export function WalletDashboard() {
         .setTimeout(180)
         .build();
 
-      const { signedTxXdr, error } = await signTransaction(transaction.toXDR(), {
-        address: publicKey,
-        networkPassphrase: STELLAR_NETWORK_PASSPHRASE
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
+      const { signedTxXdr } = await StellarWalletsKit.signTransaction(
+        transaction.toXDR(),
+        {
+          address: publicKey,
+          networkPassphrase: STELLAR_NETWORK_PASSPHRASE
+        }
+      );
 
       const signedTransaction = TransactionBuilder.fromXDR(
         signedTxXdr,
@@ -134,10 +184,25 @@ export function WalletDashboard() {
       });
       await refreshBalance(publicKey);
     } catch (error) {
+      if (isTxRejected(error)) {
+        setSendState({
+          kind: "error",
+          message: "Transaction rejected in wallet"
+        });
+        return;
+      }
+
+      if (isInsufficientBalance(error)) {
+        setSendState({
+          kind: "error",
+          message: "Insufficient balance for this transaction"
+        });
+        return;
+      }
+
       setSendState({
         kind: "error",
-        message:
-          error instanceof Error ? error.message : "Transaction submission failed"
+        message: toMessage(error)
       });
     }
   }
@@ -148,8 +213,11 @@ export function WalletDashboard() {
         <p className="eyebrow">Stellar Testnet ROSCA starter</p>
         <h1>Loop</h1>
         <p className="lede">
-          Rotating savings circle for XLM. Connect Freighter, check balance, and
-          send funds on Testnet.
+          Rotating savings circle for XLM. Connect Freighter, xBull, Lobstr, or
+          another supported wallet, check balance, and send funds on Testnet.
+        </p>
+        <p className="support">
+          Supported wallets: {supportedWallets.length ? supportedWallets.join(", ") : "loading..."}
         </p>
       </div>
 
@@ -168,6 +236,10 @@ export function WalletDashboard() {
         </div>
 
         <dl className="stats">
+          <div>
+            <dt>Wallet</dt>
+            <dd>{walletName || "—"}</dd>
+          </div>
           <div>
             <dt>Public key</dt>
             <dd>{publicKey || "—"}</dd>
