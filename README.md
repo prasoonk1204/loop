@@ -4,7 +4,8 @@ Loop is a Stellar Testnet starter for a rotating savings circle built with Next.
 
 ## What it does
 
-- Connects to Freighter
+- Connects through Stellar Wallets Kit
+- Supports Freighter, xBull, Lobstr, and other kit-backed wallets
 - Shows the connected wallet public key
 - Fetches native XLM balance from Horizon Testnet
 - Sends XLM from the connected wallet
@@ -15,6 +16,7 @@ Loop is a Stellar Testnet starter for a rotating savings circle built with Next.
 - Next.js App Router
 - TypeScript
 - Freighter API
+- Stellar Wallets Kit
 - `@stellar/stellar-sdk`
 - Stellar Testnet
 
@@ -43,6 +45,10 @@ The app defaults to Stellar Testnet:
 
 ## Notes
 
-- Freighter must be installed in the browser.
+- At least one supported wallet must be installed in the browser.
 - The send flow assumes the wallet has Testnet XLM.
+- Wallet errors are shown distinctly for:
+  - missing wallet
+  - rejected transaction
+  - insufficient balance
 - The API routes are placeholders for future ROSCA off-chain services like webhooks, queues, caching, and notifications.

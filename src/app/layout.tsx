@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Loop",
-  description: "Stellar Testnet ROSCA starter built with Next.js"
+  description: "Loop on Stellar Testnet with multi-wallet support and XLM send flow"
 };
 
 export default function RootLayout({
