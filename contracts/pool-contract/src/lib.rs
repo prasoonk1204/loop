@@ -107,3 +107,125 @@ impl PoolContract {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use soroban_sdk::{vec, Env, Address};
+    use soroban_sdk::testutils::Address as _;
+    use soroban_sdk::token::{Client as TokenClient, StellarAssetClient};
+
+    #[test]
+    fn test_successful_cycle() {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let admin = Address::generate(&env);
+        let sac = env.register_stellar_asset_contract_v2(admin);
+        let token_address = sac.address();
+        let sac_client = StellarAssetClient::new(&env, &token_address);
+        let token_client = TokenClient::new(&env, &token_address);
+
+        let contract_id = env.register(PoolContract, ());
+        let client = PoolContractClient::new(&env, &contract_id);
+
+        client.initialize(&token_address);
+
+        let members = vec![
+            &env,
+            Address::generate(&env),
+            Address::generate(&env),
+            Address::generate(&env),
+        ];
+
+        client.create_circle(&members, &100, &10);
+
+        for m in members.iter() {
+            sac_client.mint(&m, &100);
+            client.contribute(&m, &0);
+            assert_eq!(token_client.balance(&m), 0);
+        }
+
+        client.payout(&0);
+
+        assert_eq!(token_client.balance(&members.get(0).unwrap()), 300);
+        assert_eq!(token_client.balance(&members.get(1).unwrap()), 0);
+        assert_eq!(token_client.balance(&members.get(2).unwrap()), 0);
+    }
+
+    #[test]
+    #[should_panic(expected = "not all members contributed")]
+    fn test_reject_payout_missing_contributions() {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let admin = Address::generate(&env);
+        let sac = env.register_stellar_asset_contract_v2(admin);
+        let token_address = sac.address();
+        let sac_client = StellarAssetClient::new(&env, &token_address);
+
+        let contract_id = env.register(PoolContract, ());
+        let client = PoolContractClient::new(&env, &contract_id);
+
+        client.initialize(&token_address);
+
+        let members = vec![
+            &env,
+            Address::generate(&env),
+            Address::generate(&env),
+            Address::generate(&env),
+        ];
+
+        client.create_circle(&members, &100, &10);
+
+        // Only first two members contribute
+        sac_client.mint(&members.get(0).unwrap(), &100);
+        client.contribute(&members.get(0).unwrap(), &0);
+
+        sac_client.mint(&members.get(1).unwrap(), &100);
+        client.contribute(&members.get(1).unwrap(), &0);
+
+        // Third member has not contributed. This should panic.
+        client.payout(&0);
+    }
+
+    #[test]
+    fn test_correct_payout_amount() {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let admin = Address::generate(&env);
+        let sac = env.register_stellar_asset_contract_v2(admin);
+        let token_address = sac.address();
+        let sac_client = StellarAssetClient::new(&env, &token_address);
+        let token_client = TokenClient::new(&env, &token_address);
+
+        let contract_id = env.register(PoolContract, ());
+        let client = PoolContractClient::new(&env, &contract_id);
+
+        client.initialize(&token_address);
+
+        let members = vec![
+            &env,
+            Address::generate(&env),
+            Address::generate(&env),
+            Address::generate(&env),
+            Address::generate(&env),
+        ];
+
+        client.create_circle(&members, &150, &10);
+
+        for m in members.iter() {
+            sac_client.mint(&m, &150);
+            client.contribute(&m, &1);
+        }
+
+        // recipient: cycle 1 % 4 = 1 -> members[1]
+        client.payout(&1);
+
+        assert_eq!(token_client.balance(&members.get(1).unwrap()), 600);
+        assert_eq!(token_client.balance(&members.get(0).unwrap()), 0);
+        assert_eq!(token_client.balance(&members.get(2).unwrap()), 0);
+        assert_eq!(token_client.balance(&members.get(3).unwrap()), 0);
+    }
+}
+
