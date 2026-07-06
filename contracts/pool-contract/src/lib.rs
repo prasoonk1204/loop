@@ -1,10 +1,12 @@
 #![no_std]
 use soroban_sdk::{contract, contractimpl, contracttype, token, Address, Env, Vec};
+use member_registry::MemberRegistryClient;
 
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
     Token,              // Address
+    Registry,           // Address
     Members,            // Vec<Address>
     ContributionAmount, // i128
     CycleLength,        // u64
@@ -17,11 +19,12 @@ pub struct PoolContract;
 
 #[contractimpl]
 impl PoolContract {
-    pub fn initialize(env: Env, token: Address) {
+    pub fn initialize(env: Env, token: Address, registry: Address) {
         if env.storage().instance().has(&DataKey::Token) {
             panic!("already initialized");
         }
         env.storage().instance().set(&DataKey::Token, &token);
+        env.storage().instance().set(&DataKey::Registry, &registry);
     }
 
     pub fn create_circle(
@@ -97,12 +100,26 @@ impl PoolContract {
         let payout_amount = contribution_amount * (members.len() as i128);
 
         let index = (cycle_id % (members.len() as u64)) as u32;
-        let recipient = members.get(index).unwrap();
+        let local_recipient = members.get(index).unwrap();
 
+        // Get expected recipient from MemberRegistry
+        let registry_address: Address = env.storage().instance().get(&DataKey::Registry).unwrap();
+        let registry_client = MemberRegistryClient::new(&env, &registry_address);
+        let registry_recipient = registry_client.get_next_recipient(&cycle_id);
+
+        if local_recipient != registry_recipient {
+            panic!("recipient mismatch");
+        }
+
+        // Transfer funds
         let token_address: Address = env.storage().instance().get(&DataKey::Token).unwrap();
         let token_client = token::Client::new(&env, &token_address);
-        token_client.transfer(&env.current_contract_address(), &recipient, &payout_amount);
+        token_client.transfer(&env.current_contract_address(), &local_recipient, &payout_amount);
 
+        // Mark as paid in MemberRegistry
+        registry_client.mark_paid(&cycle_id, &local_recipient);
+
+        // Mark cycle paid out locally
         env.storage().persistent().set(&paid_key, &true);
     }
 }
