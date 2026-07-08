@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { StrKey } from "@stellar/stellar-sdk";
 
 export type Transaction = {
   id: string;
@@ -220,7 +219,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const triggerPayout = async () => {
+  const triggerPayout = useCallback(async () => {
     setState((prev) => ({ ...prev, pendingTx: true }));
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
@@ -280,7 +279,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       setState((prev) => ({ ...prev, pendingTx: false }));
       addToast("Soroban payout transaction submitted", "info");
     }
-  };
+  }, [state.mode, addToast]);
 
   const setAutoSimulate = (simulate: boolean) => {
     setState((prev) => ({ ...prev, autoSimulate: simulate }));
@@ -339,7 +338,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [state.autoSimulate, state.contributedThisCycle, state.mode]);
+  }, [state.autoSimulate, state.contributedThisCycle, state.mode, triggerPayout]);
 
   return (
     <CircleContext.Provider

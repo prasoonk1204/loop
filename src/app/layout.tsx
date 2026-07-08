@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { CircleProvider } from "@/lib/circle-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Loop",
-  description: "Loop on Stellar Testnet with multi-wallet support and XLM send flow"
+  title: "Loop - Stellar Rotating Savings Circle",
+  description: "Trustless ROSCA platform built on Stellar Soroban smart contracts"
 };
 
 export default function RootLayout({
@@ -13,7 +14,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#03000d]">
+        <CircleProvider>
+          {children}
+        </CircleProvider>
+      </body>
     </html>
   );
 }
