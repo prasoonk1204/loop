@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useCircle } from "@/lib/circle-context";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Settings, 
   Cpu, 
@@ -40,41 +40,41 @@ export function SettingsView() {
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="glass-panel p-6 max-w-2xl mx-auto space-y-6"
     >
-      <h2 className="text-2xl font-bold text-white flex items-center gap-2 border-b border-purple-900/20 pb-3">
-        <Settings className="w-6 h-6 text-purple-400" />
+      <h2 className="text-lg font-bold tracking-tight text-text-main flex items-center gap-2 border-b border-panel-border/40 pb-3">
+        <Settings className="w-5 h-5 text-brand-primary" />
         Developer Configurations
       </h2>
 
       {/* Mode selection */}
       <div className="space-y-3">
-        <label className="text-sm font-semibold text-slate-400 flex items-center gap-1.5">
-          <Cpu className="w-4 h-4 text-purple-400" />
+        <label className="text-xs uppercase font-bold tracking-widest text-text-muted flex items-center gap-1.5">
+          <Cpu className="w-4 h-4 text-brand-primary" />
           Execution Engine
         </label>
         
         <div className="flex gap-4">
           <button
             onClick={() => setMode("mock")}
-            className={`btn flex-1 py-4 font-bold border transition-all ${
+            className={`btn flex-1 py-4 font-bold border transition-all cursor-pointer ${
               mode === "mock"
-                ? "bg-purple-900/30 border-purple-500/60 text-white shadow-lg shadow-purple-500/10"
-                : "bg-slate-950/40 border-slate-900 text-slate-500 hover:border-slate-800"
+                ? "bg-[#241f3d]/30 border-brand-primary/25 text-text-main shadow-sm"
+                : "bg-bg-base/40 border-panel-border text-text-muted hover:border-panel-border-hover"
             }`}
           >
             Mock Simulator
           </button>
           <button
             onClick={() => setMode("soroban")}
-            className={`btn flex-1 py-4 font-bold border transition-all ${
+            className={`btn flex-1 py-4 font-bold border transition-all cursor-pointer ${
               mode === "soroban"
-                ? "bg-purple-900/30 border-purple-500/60 text-white shadow-lg shadow-purple-500/10"
-                : "bg-slate-950/40 border-slate-900 text-slate-500 hover:border-slate-800"
+                ? "bg-[#241f3d]/30 border-brand-primary/25 text-text-main shadow-sm"
+                : "bg-bg-base/40 border-panel-border text-text-muted hover:border-panel-border-hover"
             }`}
           >
             Stellar Soroban Contracts
           </button>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-[11px] text-text-subtle font-medium">
           {mode === "mock" 
             ? "Mock Simulator runs entirely locally in React state. Perfect for demonstration without wallet keys." 
             : "Soroban Contracts Mode queries real on-chain state on Horizon/RPC Testnet using Freighter wallet."}
@@ -90,15 +90,15 @@ export function SettingsView() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             onSubmit={handleSave}
-            className="space-y-4 pt-4 border-t border-purple-900/20"
+            className="space-y-4 pt-4 border-t border-panel-border/30"
           >
-            <h3 className="text-md font-bold text-purple-300 flex items-center gap-1.5">
+            <h3 className="text-sm font-bold text-brand-primary flex items-center gap-1.5">
               <Network className="w-4.5 h-4.5" />
               Network & Contract Addresses
             </h3>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-400">Horizon Node Endpoint</label>
+              <label className="text-xs font-semibold text-text-muted">Horizon Node Endpoint</label>
               <input
                 type="text"
                 value={horizonUrl}
@@ -109,7 +109,7 @@ export function SettingsView() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-400">PoolContract (ID)</label>
+              <label className="text-xs font-semibold text-text-muted">PoolContract (ID)</label>
               <input
                 type="text"
                 value={localPool}
@@ -120,7 +120,7 @@ export function SettingsView() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-400">MemberRegistry (ID)</label>
+              <label className="text-xs font-semibold text-text-muted">MemberRegistry (ID)</label>
               <input
                 type="text"
                 value={localRegistry}
@@ -131,7 +131,7 @@ export function SettingsView() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-400">Stellar Asset Contract - SAC Token (ID)</label>
+              <label className="text-xs font-semibold text-text-muted">Stellar Asset Contract - SAC Token (ID)</label>
               <input
                 type="text"
                 value={localToken}
@@ -141,7 +141,7 @@ export function SettingsView() {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary w-full mt-4">
+            <button type="submit" className="btn btn-primary w-full mt-4 py-3 text-sm cursor-pointer">
               <Save className="w-4 h-4" />
               <span>Save Smart Contract Configurations</span>
             </button>
@@ -152,11 +152,11 @@ export function SettingsView() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="p-4 bg-cyan-950/20 rounded-2xl border border-cyan-900/10 text-xs text-slate-400 flex gap-3 leading-relaxed border-t border-purple-900/20"
+            className="p-4 bg-bg-base/35 rounded-xl border border-panel-border/60 text-xs text-text-muted flex gap-3 leading-relaxed border-t border-panel-border/30"
           >
-            <ShieldCheck className="w-5 h-5 text-cyan-400 shrink-0" />
+            <ShieldCheck className="w-5 h-5 text-brand-accent shrink-0" />
             <div>
-              <span className="font-bold text-white block mb-0.5">Mock Simulator Engaged</span>
+              <span className="font-bold text-brand-primary block mb-0.5">Mock Simulator Engaged</span>
               No blockchain configurations required. Balance changes, cycles, event subscriptions, and payouts are fully simulated in memory. Auto-simulation panel on dashboard generates live background transactions.
             </div>
           </motion.div>
@@ -165,5 +165,3 @@ export function SettingsView() {
     </motion.div>
   );
 }
-
-import { AnimatePresence } from "framer-motion";

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useCircle } from "@/lib/circle-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -12,7 +13,8 @@ import {
   HelpCircle
 } from "lucide-react";
 
-export function CreateView({ onComplete }: { onComplete: () => void }) {
+export function CreateView() {
+  const router = useRouter();
   const { createCircle, publicKey, addToast } = useCircle();
   const [amount, setAmount] = useState("100");
   const [length, setLength] = useState("10");
@@ -70,7 +72,7 @@ export function CreateView({ onComplete }: { onComplete: () => void }) {
     }
 
     await createCircle(members, parsedAmount, parsedLength);
-    onComplete();
+    router.push("/dashboard");
   };
 
   return (
@@ -82,14 +84,14 @@ export function CreateView({ onComplete }: { onComplete: () => void }) {
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className="glass-panel p-6 space-y-6"
       >
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2 border-b border-purple-900/20 pb-3">
+        <h2 className="text-lg font-bold tracking-tight text-text-main flex items-center gap-2 border-b border-panel-border/40 pb-3">
           Configure Savings Circle
         </h2>
 
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-slate-400 flex items-center gap-1.5">
-              <Coins className="w-4 h-4 text-purple-400" />
+            <label className="text-xs uppercase font-bold tracking-widest text-text-muted flex items-center gap-1.5">
+              <Coins className="w-4 h-4 text-brand-primary" />
               Contribution Amount (XLM)
             </label>
             <input
@@ -100,12 +102,12 @@ export function CreateView({ onComplete }: { onComplete: () => void }) {
               placeholder="100"
               min="1"
             />
-            <p className="text-xs text-slate-500">Amount each member contributes in every rotation cycle.</p>
+            <p className="text-[11px] text-text-subtle font-medium">Amount each member contributes in every rotation cycle.</p>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-slate-400 flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-purple-400" />
+            <label className="text-xs uppercase font-bold tracking-widest text-text-muted flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-brand-primary" />
               Cycle Length (Ledgers)
             </label>
             <input
@@ -116,21 +118,21 @@ export function CreateView({ onComplete }: { onComplete: () => void }) {
               placeholder="10"
               min="1"
             />
-            <p className="text-xs text-slate-500">Duration in ledger closures of each savings round.</p>
+            <p className="text-[11px] text-text-subtle font-medium">Duration in ledger closures of each savings round.</p>
           </div>
         </div>
 
-        <div className="p-4 bg-purple-950/20 rounded-2xl border border-purple-900/20 text-xs text-slate-400 flex gap-3 leading-relaxed">
-          <HelpCircle className="w-5 h-5 text-purple-400 shrink-0" />
+        <div className="p-4 bg-bg-base/35 rounded-xl border border-panel-border/60 text-xs text-text-muted flex gap-3 leading-relaxed">
+          <HelpCircle className="w-5 h-5 text-brand-primary shrink-0" />
           <div>
-            <span className="font-bold text-white block mb-0.5">Rotating savings circle?</span>
+            <span className="font-bold text-brand-primary block mb-0.5">Rotating savings circle?</span>
             In a rotating circle, members take turns receiving the pooled savings. In each cycle, every member contributes the amount set above, and one member gets the entire payout. The rotation follows the exact order of the members list.
           </div>
         </div>
 
         <button
           onClick={handleCreate}
-          className="btn btn-primary w-full"
+          className="btn btn-primary w-full py-3 text-sm cursor-pointer"
         >
           <span>Create Circle</span>
           <ArrowRight className="w-4 h-4" />
@@ -144,7 +146,7 @@ export function CreateView({ onComplete }: { onComplete: () => void }) {
         transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
         className="glass-panel p-6 space-y-6"
       >
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2 border-b border-purple-900/20 pb-3">
+        <h2 className="text-lg font-bold tracking-tight text-text-main flex items-center gap-2 border-b border-panel-border/40 pb-3">
           Circle Members List ({members.length})
         </h2>
 
@@ -157,7 +159,7 @@ export function CreateView({ onComplete }: { onComplete: () => void }) {
             className="input-field flex-1"
             placeholder="Stellar public key (G...)"
           />
-          <button type="submit" className="btn btn-secondary p-3">
+          <button type="submit" className="btn btn-secondary p-3 cursor-pointer">
             <Plus className="w-5 h-5" />
           </button>
         </form>
@@ -175,21 +177,21 @@ export function CreateView({ onComplete }: { onComplete: () => void }) {
                   exit={{ opacity: 0, x: 10 }}
                   className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
                     isUser 
-                      ? "bg-purple-950/20 border-purple-800/40" 
-                      : "bg-slate-950/40 border-slate-900/80 hover:border-slate-800/80"
+                      ? "bg-[#241f3d]/30 border-brand-primary/25 hover:border-brand-primary/45" 
+                      : "bg-bg-base/40 border-panel-border hover:border-panel-border-hover"
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-7 h-7 rounded-full bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center text-xs font-bold font-mono">
+                    <div className="w-7 h-7 rounded-full bg-bg-base border border-panel-border/70 text-text-muted flex items-center justify-center text-xs font-bold">
                       {index + 1}
                     </div>
-                    <span className="text-sm font-semibold text-white truncate max-w-[200px] sm:max-w-xs block" title={member}>
+                    <span className="text-sm font-semibold text-text-main truncate max-w-[200px] sm:max-w-xs block" title={member}>
                       {member}
                     </span>
                   </div>
                   <button
                     onClick={() => handleRemoveMember(index)}
-                    className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-950/25 rounded-lg transition-colors"
+                    className="p-2 text-text-subtle hover:text-state-error hover:bg-[#2d1818]/60 rounded-lg transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

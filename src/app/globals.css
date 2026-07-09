@@ -1,156 +1,197 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss" source("../");
 
+@theme {
+  --color-brand-primary: oklch(0.62 0.16 265);
+  --color-brand-primary-hover: oklch(0.68 0.15 265);
+  --color-brand-accent: oklch(0.78 0.12 165);
+  --color-brand-accent-hover: oklch(0.83 0.11 165);
+  --color-bg-base: oklch(0.11 0.015 250);
+  --color-panel-bg: oklch(0.14 0.015 250);
+  --color-panel-bg-hover: oklch(0.17 0.015 250);
+  --color-panel-border: oklch(0.22 0.015 250);
+  --color-panel-border-hover: oklch(0.28 0.015 250);
+  --color-text-main: oklch(0.96 0.005 250);
+  --color-text-muted: oklch(0.72 0.01 250);
+  --color-text-subtle: oklch(0.55 0.01 250);
+}
+
 :root {
   color-scheme: dark;
-  --bg: #03000d;
-  --bg-gradient: radial-gradient(circle at 50% 0%, #150033 0%, #03000d 70%);
-  --panel-bg: rgba(18, 9, 36, 0.45);
-  --panel-border: rgba(147, 51, 234, 0.18);
-  --text: #f5f3f7;
-  --text-muted: #a79ebb;
-  --primary: #9333ea;
-  --primary-glow: rgba(147, 51, 234, 0.4);
-  --accent: #06b6d4;
-  --accent-glow: rgba(6, 182, 212, 0.3);
-  --success: #10b981;
-  --success-glow: rgba(16, 185, 129, 0.2);
-  --error: #ef4444;
-  --error-glow: rgba(239, 68, 68, 0.2);
+  --bg: oklch(11% 0.015 250);
+  --bg-gradient: radial-gradient(circle at 50% 0%, oklch(16% 0.025 260) 0%, oklch(11% 0.015 250) 80%);
+  --panel-bg: oklch(14% 0.015 250);
+  --panel-border: oklch(22% 0.015 250);
+  --text: oklch(96% 0.005 250);
+  --text-muted: oklch(72% 0.01 250);
+  --text-subtle: oklch(55% 0.01 250);
+  --primary: oklch(62% 0.16 265);
+  --primary-glow: rgba(99, 102, 241, 0.15);
+  --accent: oklch(78% 0.12 165);
+  --accent-glow: rgba(20, 184, 166, 0.15);
+  --success: oklch(78% 0.12 145);
+  --success-glow: rgba(16, 185, 129, 0.08);
+  --error: oklch(68% 0.16 25);
+  --error-glow: rgba(239, 68, 68, 0.08);
   --font-heading: 'Outfit', sans-serif;
   --font-body: 'Inter', sans-serif;
   
   font-family: var(--font-body);
+  letter-spacing: 0.015em;
+  line-height: 1.6;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* Layer base overrides to ensure utilities (like padding/margin) override resets */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-html, body {
-  min-height: 100vh;
-  background: var(--bg);
-  background-image: var(--bg-gradient);
-  color: var(--text);
-  overflow-x: hidden;
+  html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    background-image: var(--bg-gradient);
+    color: var(--text);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--text);
+  }
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(147, 51, 234, 0.3);
+  background: oklch(25% 0.015 250);
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(147, 51, 234, 0.5);
+  background: oklch(35% 0.02 250);
 }
 
-/* Typography */
-h1, h2, h3, h4 {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
+/* Custom Tailwind v4 Utilities */
 
-/* Custom layout utility */
-.glass-panel {
+@utility glass-panel {
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 20px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.glass-panel:hover {
-  border-color: rgba(147, 51, 234, 0.3);
-  box-shadow: 0 12px 40px 0 rgba(147, 51, 234, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  
+  &:hover {
+    border-color: oklch(28% 0.015 250);
+    background: oklch(15% 0.015 250);
+  }
 }
 
-/* Button variants */
-.btn {
+@utility btn {
   font-family: var(--font-heading);
   font-weight: 600;
+  letter-spacing: 0.02em;
   border: none;
   outline: none;
   cursor: pointer;
-  border-radius: 12px;
-  padding: 12px 24px;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 10px;
+  padding: 10px 20px;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
   gap: 8px;
   justify-content: center;
 }
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary), #581c87);
+
+@utility btn-primary {
+  background: var(--primary);
   color: #fff;
-  box-shadow: 0 4px 15px var(--primary-glow);
+  border: 1px solid oklch(68% 0.14 265);
+  
+  &:hover:not(:disabled) {
+    background: oklch(67% 0.15 265);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--primary-glow);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
 }
-.btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(147, 51, 234, 0.6);
+
+@utility btn-accent {
+  background: var(--accent);
+  color: oklch(11% 0.015 250);
+  border: 1px solid oklch(83% 0.1 165);
+  
+  &:hover:not(:disabled) {
+    background: oklch(83% 0.1 165);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--accent-glow);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
 }
+
+@utility btn-secondary {
+  background: oklch(17% 0.015 250);
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+  
+  &:hover:not(:disabled) {
+    background: oklch(21% 0.015 250);
+    border-color: oklch(30% 0.015 250);
+  }
+  
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+@utility input-field {
+  font-family: var(--font-body);
+  background: oklch(12% 0.015 250);
+  border: 1px solid oklch(22% 0.015 250);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  font-size: 14px;
+  
+  &:focus {
+    border-color: var(--primary);
+    background: oklch(13% 0.015 250);
+  }
+}
+
 .btn:disabled {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  color: rgba(255, 255, 255, 0.35) !important;
+  background: oklch(14% 0.005 250) !important;
+  border: 1px solid oklch(18% 0.005 250) !important;
+  color: oklch(45% 0.005 250) !important;
   box-shadow: none !important;
   cursor: not-allowed !important;
-  opacity: 1 !important;
   transform: none !important;
 }
 
-.btn-accent {
-  background: linear-gradient(135deg, var(--accent), #0891b2);
-  color: #03000d;
-  box-shadow: 0 4px 15px var(--accent-glow);
-}
-.btn-accent:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.6);
-}
-
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text);
-}
-.btn-secondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-/* Form styles */
-.input-field {
-  font-family: var(--font-body);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  color: var(--text);
-  padding: 12px 16px;
-  outline: none;
-  transition: all 0.3s ease;
-}
-.input-field:focus {
-  border-color: var(--primary);
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 10px rgba(147, 51, 234, 0.2);
-}
-
-/* Loading animations */
+/* Animations */
 @keyframes pulseGlow {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.85; }
 }
-
 .animate-pulse-glow {
-  animation: pulseGlow 2s infinite ease-in-out;
+  animation: pulseGlow 2.5s infinite ease-in-out;
 }

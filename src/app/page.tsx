@@ -1,253 +1,293 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { useCircle } from "@/lib/circle-context";
-import { DashboardView } from "@/components/dashboard-view";
-import { CreateView } from "@/components/create-view";
-import { SettingsView } from "@/components/settings-view";
-import { initWalletKit, getSupportedWallets, getConnectedWalletName } from "@/lib/walletkit";
-import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk";
-import { horizonServer, nativeBalance, formatXlmBalance } from "@/lib/stellar";
-import { motion, AnimatePresence } from "framer-motion";
+import React from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
 import { 
-  LayoutDashboard, 
-  PlusCircle, 
-  Settings as SettingsIcon, 
-  Wallet, 
-  LogOut,
-  AlertCircle,
-  CheckCircle,
-  Info
+  ArrowRight, 
+  Zap, 
+  Cpu, 
+  Coins, 
+  Users, 
+  Layers
 } from "lucide-react";
 
-type Tab = "dashboard" | "create" | "settings";
-
-export default function Home() {
-  const {
-    mode,
-    publicKey,
-    walletName,
-    balance,
-    connect,
-    disconnect,
-    toasts,
-    addToast
-  } = useCircle();
-
-  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
-  const [loadingWallet, setLoadingWallet] = useState(false);
-
-  useEffect(() => {
-    initWalletKit();
-  }, []);
-
-  const balanceLabel = useMemo(() => formatXlmBalance(balance), [balance]);
-
-  async function connectWallet() {
-    setLoadingWallet(true);
-    try {
-      const wallets = await getSupportedWallets();
-      const availableWallets = wallets.filter((wallet) => wallet.isAvailable);
-
-      if (!availableWallets.length) {
-        addToast("No wallets detected. Install Freighter, Lobstr or xBull.", "error");
-        return;
-      }
-
-      const { address } = await StellarWalletsKit.authModal();
-      if (!address) {
-        throw new Error("Wallet did not return address");
-      }
-
-      const account = await horizonServer.loadAccount(address);
-      const nativeBal = nativeBalance(account.balances);
-      const name = getConnectedWalletName() || "Stellar Wallet";
-
-      connect(address, name, nativeBal);
-    } catch (error) {
-      addToast(error instanceof Error ? error.message : "Connection failed", "error");
-    } finally {
-      setLoadingWallet(false);
-    }
-  }
-
-  function handleDisconnect() {
-    void StellarWalletsKit.disconnect();
-    disconnect();
-  }
-
+export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col relative pb-12">
-      {/* Toast Notification Container */}
-      <div className="fixed top-6 right-6 z-50 space-y-3 pointer-events-none w-80">
-        <AnimatePresence>
-          {toasts.map((toast) => (
-            <motion.div
-              key={toast.id}
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9, x: 20 }}
-              className={`p-4 rounded-2xl border backdrop-blur-md shadow-2xl flex gap-3 pointer-events-auto items-start ${
-                toast.type === "success"
-                  ? "bg-emerald-950/70 border-emerald-500/40 text-emerald-300"
-                  : toast.type === "error"
-                  ? "bg-red-950/70 border-red-500/40 text-red-300"
-                  : "bg-purple-950/70 border-purple-500/40 text-purple-300"
-              }`}
-            >
-              {toast.type === "success" && <CheckCircle className="w-5 h-5 shrink-0" />}
-              {toast.type === "error" && <AlertCircle className="w-5 h-5 shrink-0" />}
-              {toast.type === "info" && <Info className="w-5 h-5 shrink-0" />}
-              <span className="text-sm font-medium leading-relaxed">{toast.message}</span>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+    <div className="min-h-screen bg-bg-base text-text-main flex flex-col relative overflow-hidden">
+      {/* Premium Background Orbits */}
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-brand-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-brand-accent/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+      
+      {/* Decorative Orbits SVG */}
+      <div className="absolute top-[20%] right-[-200px] w-[600px] h-[600px] opacity-10 pointer-events-none hidden lg:block -z-10">
+        <svg viewBox="0 0 100 100" fill="none" className="w-full h-full animate-[spin_120s_linear_infinite]">
+          <circle cx="50" cy="50" r="48" stroke="currentColor" strokeWidth="0.15" strokeDasharray="2 4" />
+          <circle cx="50" cy="50" r="38" stroke="currentColor" strokeWidth="0.15" />
+          <circle cx="50" cy="50" r="28" stroke="currentColor" strokeWidth="0.15" strokeDasharray="4 6" />
+          <circle cx="50" cy="50" r="18" stroke="currentColor" strokeWidth="0.15" />
+          <circle cx="50" cy="50" r="8" stroke="currentColor" strokeWidth="0.15" />
+        </svg>
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-[#03000d]/65 backdrop-blur-md border-b border-purple-900/10">
+      <header className="sticky top-0 z-40 bg-bg-base/60 backdrop-blur-md border-b border-panel-border/30">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-500 to-cyan-500 flex items-center justify-center font-extrabold text-lg text-white shadow-lg shadow-purple-500/20">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-primary to-brand-accent flex items-center justify-center font-extrabold text-lg text-white shadow-md">
               L
             </div>
             <div>
-              <span className="font-heading font-extrabold text-xl text-white tracking-tight block">Loop</span>
-              <span className="text-[10px] text-purple-400 font-medium tracking-wider uppercase block">Savings Circle</span>
+              <span className="font-heading font-extrabold text-xl text-text-main tracking-tight block">Loop</span>
+              <span className="text-[10px] text-text-muted font-bold tracking-widest uppercase block">Savings Circle</span>
             </div>
           </div>
-
-          {/* Navigation Tabs */}
-          <nav className="hidden sm:flex bg-purple-950/20 border border-purple-900/15 rounded-xl p-1 gap-1">
-            <button
-              onClick={() => setActiveTab("dashboard")}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
-                activeTab === "dashboard"
-                  ? "bg-purple-500 text-white shadow-md shadow-purple-500/20"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Dashboard
-            </button>
-            <button
-              onClick={() => setActiveTab("create")}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
-                activeTab === "create"
-                  ? "bg-purple-500 text-white shadow-md shadow-purple-500/20"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <PlusCircle className="w-4 h-4" />
-              Create Circle
-            </button>
-            <button
-              onClick={() => setActiveTab("settings")}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
-                activeTab === "settings"
-                  ? "bg-purple-500 text-white shadow-md shadow-purple-500/20"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <SettingsIcon className="w-4 h-4" />
-              Settings
-            </button>
-          </nav>
-
-          {/* Wallet Connection */}
-          <div className="flex items-center gap-3">
-            <span className={`text-[10px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-full border hidden md:inline-block ${
-              mode === "mock"
-                ? "bg-cyan-950/30 text-cyan-400 border-cyan-800/30"
-                : "bg-purple-950/30 text-purple-400 border-purple-800/30"
-            }`}>
-              {mode} Mode
-            </span>
-
-            {publicKey ? (
-              <div className="flex items-center bg-purple-950/20 border border-purple-900/25 rounded-xl px-4 py-1.5 gap-3">
-                <div className="text-right">
-                  <span className="text-[10px] text-slate-400 block font-semibold">{walletName}</span>
-                  <span className="text-xs text-white font-bold block">{parseFloat(balanceLabel).toFixed(2)} XLM</span>
-                </div>
-                <button
-                  onClick={handleDisconnect}
-                  className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
-                  title="Disconnect"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={connectWallet}
-                disabled={loadingWallet}
-                className="btn btn-primary py-2.5 px-5 text-sm"
-              >
-                <Wallet className="w-4 h-4" />
-                <span>{loadingWallet ? "Connecting..." : "Connect"}</span>
-              </button>
-            )}
-          </div>
+          
+          <Link
+            href="/dashboard"
+            className="btn btn-primary py-2 px-5 text-xs tracking-wider cursor-pointer"
+          >
+            Launch App
+          </Link>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-6 mt-8 flex-1 w-full">
-        {/* Mobile Navigation (Shown only on small screens) */}
-        <div className="flex sm:hidden justify-center mb-6">
-          <div className="flex bg-purple-950/20 border border-purple-900/15 rounded-xl p-1 gap-1 w-full max-w-sm justify-around">
-            <button
-              onClick={() => setActiveTab("dashboard")}
-              className={`p-2.5 text-xs font-semibold rounded-lg flex-1 flex flex-col items-center gap-1 transition-all ${
-                activeTab === "dashboard"
-                  ? "bg-purple-50 text-purple-950 shadow-md"
-                  : "text-slate-400 hover:text-white"
-              }`}
+      {/* Hero Section */}
+      <section className="max-w-7xl mx-auto px-6 py-20 lg:py-32 flex flex-col lg:flex-row items-center gap-12 flex-1 w-full relative">
+        <div className="flex-1 space-y-8 text-center lg:text-left">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-primary/10 border border-brand-primary/20 text-xs font-semibold text-brand-primary"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Next-Generation ROSCA Platform</span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-heading text-text-main leading-[1.1] tracking-tight"
+          >
+            Trustless Rotating Savings on{" "}
+            <span className="bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
+              Stellar
+            </span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="text-base sm:text-lg text-text-muted max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium"
+          >
+            Pool funds, take turns, and claim the accumulated capital. Secure,
+            transparent, peer-to-peer ROSCA savings powered by Stellar Soroban
+            smart contracts.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4"
+          >
+            <Link
+              href="/dashboard"
+              className="btn btn-primary px-8 py-3.5 text-sm cursor-pointer shadow-lg shadow-brand-primary/10"
             >
-              <LayoutDashboard className="w-5 h-5" />
-              <span>Dashboard</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("create")}
-              className={`p-2.5 text-xs font-semibold rounded-lg flex-1 flex flex-col items-center gap-1 transition-all ${
-                activeTab === "create"
-                  ? "bg-purple-50 text-purple-950 shadow-md"
-                  : "text-slate-400 hover:text-white"
-              }`}
+              <span>Enter Dashboard</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/create"
+              className="btn btn-secondary px-8 py-3.5 text-sm cursor-pointer"
             >
-              <PlusCircle className="w-5 h-5" />
-              <span>Create</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("settings")}
-              className={`p-2.5 text-xs font-semibold rounded-lg flex-1 flex flex-col items-center gap-1 transition-all ${
-                activeTab === "settings"
-                  ? "bg-purple-50 text-purple-950 shadow-md"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <SettingsIcon className="w-5 h-5" />
-              <span>Settings</span>
-            </button>
-          </div>
+              Configure a Circle
+            </Link>
+          </motion.div>
         </div>
 
-        {/* Content View with Page Transitions */}
-        <AnimatePresence mode="wait">
+        {/* Orbit Demo Component */}
+        <div className="flex-1 w-full flex justify-center items-center relative">
           <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] rounded-full border border-panel-border/30 flex items-center justify-center relative bg-panel-bg/10 backdrop-blur-[2px]"
           >
-            {activeTab === "dashboard" && <DashboardView />}
-            {activeTab === "create" && <CreateView onComplete={() => setActiveTab("dashboard")} />}
-            {activeTab === "settings" && <SettingsView />}
+            {/* Center Logo */}
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-brand-primary to-brand-accent flex items-center justify-center font-extrabold text-3xl text-white shadow-2xl relative">
+              L
+              <div className="absolute inset-0 rounded-2xl bg-white/10 animate-ping" />
+            </div>
+
+            {/* Orbit paths */}
+            <div className="absolute inset-[15%] rounded-full border border-dashed border-panel-border/40 animate-[spin_60s_linear_infinite]" />
+            <div className="absolute inset-[30%] rounded-full border border-panel-border/30 animate-[spin_40s_linear_infinite_reverse]" />
+
+            {/* Orbiting nodes */}
+            <div className="absolute top-[15%] left-[15%] w-4 h-4 rounded-full bg-brand-primary shadow-lg shadow-brand-primary/50" />
+            <div className="absolute bottom-[30%] right-[6%] w-3 h-3 rounded-full bg-brand-accent shadow-lg shadow-brand-accent/50" />
+            <div className="absolute bottom-[10%] left-[25%] w-3.5 h-3.5 rounded-full bg-text-muted border border-panel-border" />
           </motion.div>
-        </AnimatePresence>
-      </main>
+        </div>
+      </section>
+
+      {/* How it Works Section */}
+      <section className="bg-panel-bg/25 border-y border-panel-border/45 py-24 relative">
+        <div className="max-w-7xl mx-auto px-6 space-y-16">
+          <div className="text-center space-y-4">
+            <h2 className="text-3xl font-bold font-heading text-text-main tracking-tight">
+              The ROSCA Cycle
+            </h2>
+            <p className="text-sm text-text-muted max-w-xl mx-auto font-medium">
+              A rotating savings circle allows members to systematically save and access larger pools of capital trustlessly.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Step 1 */}
+            <div className="glass-panel p-6 space-y-4 hover:border-brand-primary/20">
+              <div className="w-10 h-10 rounded-xl bg-brand-primary/10 border border-brand-primary/25 flex items-center justify-center font-bold text-brand-primary font-heading">
+                1
+              </div>
+              <h3 className="text-lg font-bold text-text-main">Establish the Circle</h3>
+              <p className="text-xs text-text-muted leading-relaxed font-medium">
+                Set rotation parameters: contributions (e.g. 100 XLM), cycle length (in ledgers), and list of participant public keys.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="glass-panel p-6 space-y-4 hover:border-brand-primary/20">
+              <div className="w-10 h-10 rounded-xl bg-brand-primary/10 border border-brand-primary/25 flex items-center justify-center font-bold text-brand-primary font-heading">
+                2
+              </div>
+              <h3 className="text-lg font-bold text-text-main">Cycle Deposit</h3>
+              <p className="text-xs text-text-muted leading-relaxed font-medium">
+                In each rotation round, every member deposits their contribution amount into the smart contract pool escrow.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="glass-panel p-6 space-y-4 hover:border-brand-accent/20">
+              <div className="w-10 h-10 rounded-xl bg-brand-accent/10 border border-brand-accent/25 flex items-center justify-center font-bold text-brand-accent font-heading">
+                3
+              </div>
+              <h3 className="text-lg font-bold text-text-main">Automatic Payout</h3>
+              <p className="text-xs text-text-muted leading-relaxed font-medium">
+                Once all round deposits are received, the pool contract automatically releases the full pot to the {"round's"} designated recipient.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Value Propositions / Bento Grid */}
+      <section className="max-w-7xl mx-auto px-6 py-24 space-y-16">
+        <div className="text-center space-y-4">
+          <h2 className="text-3xl font-bold font-heading text-text-main tracking-tight">
+            Designed for Trustless Finance
+          </h2>
+          <p className="text-sm text-text-muted max-w-xl mx-auto font-medium">
+            Loop leverages the speed and security of Stellar to bring Rotating Savings Circles online.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card 1: Large Bento */}
+          <div className="glass-panel p-8 md:col-span-2 flex flex-col justify-between space-y-8 hover:border-brand-primary/25">
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary">
+                <Cpu className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-text-main tracking-tight">Soroban Smart Contracts</h3>
+              <p className="text-xs text-text-muted leading-relaxed font-medium">
+                Loop transactions execute trustlessly via custom WebAssembly contracts on {"Stellar's"} Soroban network. Deposits are securely held in escrow and released only when all conditions are fulfilled. No administrators, no middlemen, zero counterparty risk.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-[10px] uppercase tracking-widest font-bold bg-bg-base border border-panel-border/70 text-text-muted px-2.5 py-1 rounded-full">Soroban WASM</span>
+              <span className="text-[10px] uppercase tracking-widest font-bold bg-bg-base border border-panel-border/70 text-text-muted px-2.5 py-1 rounded-full">Escrow API</span>
+            </div>
+          </div>
+
+          {/* Card 2: Small Bento */}
+          <div className="glass-panel p-8 flex flex-col justify-between space-y-8 hover:border-brand-accent/25">
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent">
+                <Zap className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-text-main tracking-tight">Mock Simulator</h3>
+              <p className="text-xs text-text-muted leading-relaxed font-medium">
+                Try out the rotating savings circle flow immediately. Our mock simulation tool populates active circles and triggers contributions, mimicking on-chain latency.
+              </p>
+            </div>
+            <Link href="/dashboard" className="text-xs text-brand-accent hover:text-brand-accent-hover font-bold inline-flex items-center gap-1">
+              Try simulator
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {/* Card 3: Small Bento */}
+          <div className="glass-panel p-8 flex flex-col justify-between space-y-8 hover:border-brand-primary/25">
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 border border-brand-primary/20 flex items-center justify-center text-brand-primary">
+                <Coins className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-text-main tracking-tight">Stellar Native</h3>
+              <p className="text-xs text-text-muted leading-relaxed font-medium">
+                Make contributions in native XLM with transaction fees under a fraction of a cent. Integrates with Freighter wallet out of the box.
+              </p>
+            </div>
+            <span className="text-[10px] uppercase tracking-widest font-bold text-text-subtle">Stellar SDK v16</span>
+          </div>
+
+          {/* Card 4: Large Bento */}
+          <div className="glass-panel p-8 md:col-span-2 flex flex-col justify-between space-y-8 hover:border-brand-primary/25">
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#241f3d]/50 border border-brand-primary/20 flex items-center justify-center text-brand-primary">
+                <Users className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-text-main tracking-tight">Collaborative Capital</h3>
+              <p className="text-xs text-text-muted leading-relaxed font-medium">
+                ROSCA (Rotating Savings and Credit Associations) communities have enabled informal peer-to-peer banking globally for centuries. Loop digitizes this powerful social tool, letting you construct decentralized networks of trustless savings pools.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-[10px] uppercase tracking-widest font-bold bg-bg-base border border-panel-border/70 text-text-muted px-2.5 py-1 rounded-full">Community Escrow</span>
+              <span className="text-[10px] uppercase tracking-widest font-bold bg-bg-base border border-panel-border/70 text-text-muted px-2.5 py-1 rounded-full">Decentralized Savings</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer / Final CTA */}
+      <footer className="bg-bg-base border-t border-panel-border/40 py-16 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8 relative">
+          <div className="space-y-2 text-center md:text-left">
+            <h3 className="text-2xl font-bold font-heading text-text-main tracking-tight">
+              Ready to loop your savings?
+            </h3>
+            <p className="text-xs text-text-muted font-medium">
+              Start a rotating savings pool on Stellar Testnet now.
+            </p>
+          </div>
+          
+          <Link
+            href="/dashboard"
+            className="btn btn-primary px-8 py-3.5 text-sm cursor-pointer shadow-lg shadow-brand-primary/10"
+          >
+            <span>Launch Dashboard</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+        <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-panel-border/20 text-center text-[10px] text-text-subtle font-bold tracking-widest uppercase">
+          &copy; 2026 Loop Savings Circle. Built on Stellar Soroban.
+        </div>
+      </footer>
     </div>
   );
 }
