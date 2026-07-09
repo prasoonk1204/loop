@@ -2,10 +2,8 @@
 
 import React, { useState } from "react";
 import { useCircle } from "@/lib/circle-context";
-import { StrKey } from "@stellar/stellar-sdk";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Users, 
   Plus, 
   Trash2, 
   Coins, 
@@ -79,8 +77,9 @@ export function CreateView({ onComplete }: { onComplete: () => void }) {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
       {/* Parameters panel */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className="glass-panel p-6 space-y-6"
       >
         <h2 className="text-2xl font-bold text-white flex items-center gap-2 border-b border-purple-900/20 pb-3">
@@ -140,9 +139,9 @@ export function CreateView({ onComplete }: { onComplete: () => void }) {
 
       {/* Members builder */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
         className="glass-panel p-6 space-y-6"
       >
         <h2 className="text-2xl font-bold text-white flex items-center gap-2 border-b border-purple-900/20 pb-3">

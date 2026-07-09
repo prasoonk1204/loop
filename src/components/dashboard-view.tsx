@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useCircle } from "@/lib/circle-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -10,8 +10,7 @@ import {
   Play, 
   Pause, 
   CheckCircle2, 
-  HelpCircle,
-  Clock,
+  Clock, 
   ArrowUpRight
 } from "lucide-react";
 
@@ -54,8 +53,9 @@ export function DashboardView() {
         
         {/* Cycle Progress Panel */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           className="glass-panel p-6 relative overflow-hidden"
         >
           {/* Decorative background glow */}
@@ -104,9 +104,9 @@ export function DashboardView() {
 
         {/* Action Panel */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
           className="glass-panel p-6"
         >
           <h3 className="text-xl font-bold text-white mb-4">Actions</h3>
@@ -191,9 +191,9 @@ export function DashboardView() {
 
         {/* Live Transaction Log */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ duration: 0.4, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="glass-panel p-6"
         >
           <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
@@ -267,9 +267,9 @@ export function DashboardView() {
 
       {/* Right Col: Circle Members */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
+        transition={{ duration: 0.4, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
         className="glass-panel p-6 space-y-4"
       >
         <div className="flex justify-between items-center pb-3 border-b border-purple-900/20">
@@ -286,8 +286,11 @@ export function DashboardView() {
             const isNextRecipient = member === nextPayoutRecipient;
 
             return (
-              <div 
+              <motion.div 
                 key={member}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.12 + index * 0.04, ease: [0.16, 1, 0.3, 1] }}
                 className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
                   isNextRecipient 
                     ? "bg-cyan-950/15 border-cyan-800/30" 
@@ -329,7 +332,7 @@ export function DashboardView() {
                     </span>
                   )}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

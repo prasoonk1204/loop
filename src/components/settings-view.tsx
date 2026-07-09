@@ -7,9 +7,7 @@ import {
   Settings, 
   Cpu, 
   Network, 
-  Terminal, 
   Save, 
-  FileCode,
   ShieldCheck
 } from "lucide-react";
 
@@ -37,8 +35,9 @@ export function SettingsView() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="glass-panel p-6 max-w-2xl mx-auto space-y-6"
     >
       <h2 className="text-2xl font-bold text-white flex items-center gap-2 border-b border-purple-900/20 pb-3">
