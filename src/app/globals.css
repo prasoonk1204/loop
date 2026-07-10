@@ -1,47 +1,45 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
-@import "tailwindcss" source("../");
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
 
 @theme {
-  --color-brand-primary: oklch(0.62 0.16 265);
-  --color-brand-primary-hover: oklch(0.68 0.15 265);
-  --color-brand-accent: oklch(0.78 0.12 165);
-  --color-brand-accent-hover: oklch(0.83 0.11 165);
-  --color-bg-base: oklch(0.11 0.015 250);
-  --color-panel-bg: oklch(0.14 0.015 250);
-  --color-panel-bg-hover: oklch(0.17 0.015 250);
-  --color-panel-border: oklch(0.22 0.015 250);
-  --color-panel-border-hover: oklch(0.28 0.015 250);
-  --color-text-main: oklch(0.96 0.005 250);
-  --color-text-muted: oklch(0.72 0.01 250);
-  --color-text-subtle: oklch(0.55 0.01 250);
+  /* Accent — one color, used sparingly */
+  --color-accent: oklch(0.78 0.15 85);
+  --color-accent-dim: oklch(0.68 0.14 85);
+  --color-accent-subtle: oklch(0.20 0.04 85);
+
+  /* Surfaces — amber-tinted dark neutrals */
+  --color-surface-0: oklch(0.10 0.008 85);   /* page background */
+  --color-surface-1: oklch(0.13 0.008 85);   /* card background */
+  --color-surface-2: oklch(0.17 0.008 85);   /* hover / raised card */
+  --color-surface-3: oklch(0.21 0.008 85);   /* selected / elevated */
+
+  /* Borders */
+  --color-border-subtle: oklch(0.20 0.006 85);
+  --color-border-default: oklch(0.25 0.007 85);
+  --color-border-strong: oklch(0.33 0.009 85);
+
+  /* Text — opacity-based hierarchy */
+  --color-text-1: oklch(0.97 0.005 85);    /* primary */
+  --color-text-2: oklch(0.75 0.008 85);    /* secondary */
+  --color-text-3: oklch(0.55 0.007 85);    /* tertiary / labels */
+  --color-text-4: oklch(0.38 0.005 85);    /* disabled */
+
+  /* Semantic */
+  --color-success: oklch(0.72 0.14 145);
+  --color-error: oklch(0.65 0.16 20);
 }
 
 :root {
   color-scheme: dark;
-  --bg: oklch(11% 0.015 250);
-  --bg-gradient: radial-gradient(circle at 50% 0%, oklch(16% 0.025 260) 0%, oklch(11% 0.015 250) 80%);
-  --panel-bg: oklch(14% 0.015 250);
-  --panel-border: oklch(22% 0.015 250);
-  --text: oklch(96% 0.005 250);
-  --text-muted: oklch(72% 0.01 250);
-  --text-subtle: oklch(55% 0.01 250);
-  --primary: oklch(62% 0.16 265);
-  --primary-glow: rgba(99, 102, 241, 0.15);
-  --accent: oklch(78% 0.12 165);
-  --accent-glow: rgba(20, 184, 166, 0.15);
-  --success: oklch(78% 0.12 145);
-  --success-glow: rgba(16, 185, 129, 0.08);
-  --error: oklch(68% 0.16 25);
-  --error-glow: rgba(239, 68, 68, 0.08);
-  --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  
-  font-family: var(--font-body);
-  letter-spacing: 0.015em;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  font-family: var(--font-sans);
+  font-size: 16px;
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Layer base overrides to ensure utilities (like padding/margin) override resets */
 @layer base {
   * {
     box-sizing: border-box;
@@ -51,147 +49,175 @@
 
   html, body {
     min-height: 100vh;
-    background: var(--bg);
-    background-image: var(--bg-gradient);
-    color: var(--text);
+    background: oklch(10% 0.008 85);
+    color: oklch(97% 0.005 85);
     overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Typography */
   h1, h2, h3, h4 {
-    font-family: var(--font-heading);
-    font-weight: 700;
-    letter-spacing: -0.015em;
-    color: var(--text);
+    font-family: var(--font-sans);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: oklch(97% 0.005 85);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background: oklch(78% 0.15 85 / 0.25);
+    color: oklch(97% 0.005 85);
   }
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg);
-}
-::-webkit-scrollbar-thumb {
-  background: oklch(25% 0.015 250);
-  border-radius: 99px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: oklch(35% 0.02 250);
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: oklch(10% 0.008 85); }
+::-webkit-scrollbar-thumb { background: oklch(25% 0.007 85); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: oklch(35% 0.009 85); }
 
-/* Custom Tailwind v4 Utilities */
+/* ─── Utilities ──────────────────────────────────────────────────── */
 
-@utility glass-panel {
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  border-radius: 16px;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
-  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  
+@utility surface-card {
+  background: oklch(13% 0.008 85);
+  border: 1px solid oklch(20% 0.006 85);
+  border-radius: 4px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
   &:hover {
-    border-color: oklch(28% 0.015 250);
-    background: oklch(15% 0.015 250);
+    background: oklch(15% 0.008 85);
+    border-color: oklch(26% 0.007 85);
+  }
+}
+
+/* Alias glass-panel → surface-card for backward compat */
+@utility glass-panel {
+  background: oklch(13% 0.008 85);
+  border: 1px solid oklch(20% 0.006 85);
+  border-radius: 4px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    background: oklch(15% 0.008 85);
+    border-color: oklch(26% 0.007 85);
   }
 }
 
 @utility btn {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  border: none;
-  outline: none;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
-  border-radius: 10px;
+  border-radius: 2px;
   padding: 10px 20px;
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
   gap: 8px;
   justify-content: center;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+  white-space: nowrap;
 }
 
 @utility btn-primary {
-  background: var(--primary);
-  color: #fff;
-  border: 1px solid oklch(68% 0.14 265);
-  
-  &:hover:not(:disabled) {
-    background: oklch(67% 0.15 265);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px var(--primary-glow);
-  }
-  
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-}
+  background: oklch(78% 0.15 85);
+  color: oklch(10% 0.008 85);
+  border: 1px solid oklch(78% 0.15 85);
 
-@utility btn-accent {
-  background: var(--accent);
-  color: oklch(11% 0.015 250);
-  border: 1px solid oklch(83% 0.1 165);
-  
   &:hover:not(:disabled) {
-    background: oklch(83% 0.1 165);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px var(--accent-glow);
+    background: oklch(82% 0.14 85);
+    border-color: oklch(82% 0.14 85);
   }
-  
+
   &:active:not(:disabled) {
-    transform: translateY(0);
+    background: oklch(70% 0.15 85);
+    transform: translateY(1px);
   }
 }
 
 @utility btn-secondary {
-  background: oklch(17% 0.015 250);
-  border: 1px solid var(--panel-border);
-  color: var(--text);
-  
+  background: transparent;
+  color: oklch(75% 0.008 85);
+  border: 1px solid oklch(25% 0.007 85);
+
   &:hover:not(:disabled) {
-    background: oklch(21% 0.015 250);
-    border-color: oklch(30% 0.015 250);
+    border-color: oklch(40% 0.009 85);
+    color: oklch(97% 0.005 85);
+    background: oklch(15% 0.008 85);
   }
-  
+
   &:active:not(:disabled) {
-    transform: translateY(0);
+    transform: translateY(1px);
+  }
+}
+
+@utility btn-ghost {
+  background: transparent;
+  color: oklch(75% 0.008 85);
+  border: 1px solid transparent;
+
+  &:hover:not(:disabled) {
+    border-color: oklch(25% 0.007 85);
+    color: oklch(97% 0.005 85);
   }
 }
 
 @utility input-field {
-  font-family: var(--font-body);
-  background: oklch(12% 0.015 250);
-  border: 1px solid oklch(22% 0.015 250);
-  border-radius: 10px;
-  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  background: oklch(12% 0.008 85);
+  border: 1px solid oklch(22% 0.006 85);
+  border-radius: 2px;
+  color: oklch(97% 0.005 85);
   padding: 10px 14px;
   outline: none;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-  font-size: 14px;
-  
+  width: 100%;
+  transition: border-color 0.15s ease;
+
+  &::placeholder {
+    color: oklch(45% 0.005 85);
+  }
+
   &:focus {
-    border-color: var(--primary);
-    background: oklch(13% 0.015 250);
+    border-color: oklch(78% 0.15 85);
+    background: oklch(13% 0.008 85);
   }
 }
 
 .btn:disabled {
-  background: oklch(14% 0.005 250) !important;
-  border: 1px solid oklch(18% 0.005 250) !important;
-  color: oklch(45% 0.005 250) !important;
-  box-shadow: none !important;
+  background: oklch(14% 0.005 85) !important;
+  border-color: oklch(18% 0.005 85) !important;
+  color: oklch(38% 0.005 85) !important;
   cursor: not-allowed !important;
   transform: none !important;
 }
 
-/* Animations */
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.85; }
+/* Accent badge utility */
+@utility badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  border: 1px solid;
 }
-.animate-pulse-glow {
-  animation: pulseGlow 2.5s infinite ease-in-out;
+
+/* Divider */
+@utility divider {
+  border: none;
+  border-top: 1px solid oklch(20% 0.006 85);
+}
+
+/* Animations */
+@keyframes pulse-accent {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+.animate-pulse-accent {
+  animation: pulse-accent 3s infinite ease-in-out;
 }

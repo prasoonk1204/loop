@@ -3,21 +3,64 @@
 import React from "react";
 import { useCircle } from "@/lib/circle-context";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Coins, 
-  Users, 
-  ArrowRightLeft, 
-  Play, 
-  Pause, 
-  CheckCircle2, 
-  Clock, 
-  ArrowUpRight
+import {
+  Coins,
+  Users,
+  ArrowRightLeft,
+  Play,
+  Pause,
+  CheckCircle2,
+  Clock,
+  ArrowUpRight,
 } from "lucide-react";
+
+const S = {
+  bg0:          "oklch(10% 0.008 85)",
+  bg1:          "oklch(13% 0.008 85)",
+  bg2:          "oklch(17% 0.008 85)",
+  border:       "oklch(20% 0.006 85)",
+  borderHover:  "oklch(28% 0.007 85)",
+  text1:        "oklch(97% 0.005 85)",
+  text2:        "oklch(68% 0.008 85)",
+  text3:        "oklch(45% 0.005 85)",
+  accent:       "oklch(78% 0.15 85)",
+  accentBg:     "oklch(78% 0.15 85 / 0.08)",
+  accentBorder: "oklch(78% 0.15 85 / 0.25)",
+  success:      "oklch(72% 0.14 145)",
+  successBg:    "oklch(18% 0.03 145)",
+  error:        "oklch(65% 0.16 20)",
+};
 
 function formatAddress(addr: string) {
   if (!addr) return "—";
   if (addr.length < 15) return addr;
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+}
+
+function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={className}
+      style={{
+        background: S.bg1,
+        border: `1px solid ${S.border}`,
+        borderRadius: "4px",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function Label({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      className="text-[10px] uppercase tracking-widest font-semibold"
+      style={{ color: S.text3 }}
+    >
+      {children}
+    </span>
+  );
 }
 
 export function DashboardView() {
@@ -37,308 +80,389 @@ export function DashboardView() {
     setAutoSimulate,
   } = useCircle();
 
-  const totalPot = contributionAmount * contributedThisCycle.length;
-  const expectedTotalPot = contributionAmount * members.length;
+  const totalPot          = contributionAmount * contributedThisCycle.length;
+  const expectedTotalPot  = contributionAmount * members.length;
   const contributionsCount = contributedThisCycle.length;
-  const totalMembersCount = members.length;
-  const progressPercent = (contributionsCount / totalMembersCount) * 100;
-  const isRecipient = publicKey === nextPayoutRecipient;
-
+  const totalMembersCount  = members.length;
+  const progressPercent    = totalMembersCount ? (contributionsCount / totalMembersCount) * 100 : 0;
+  const isRecipient        = publicKey === nextPayoutRecipient;
   const hasUserContributed = publicKey ? contributedThisCycle.includes(publicKey) : false;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-      {/* Left Col: Cycle status and Actions */}
+      {/* ── Left col ───────────────────────────────────────────── */}
       <div className="lg:col-span-2 space-y-6">
-        
-        {/* Cycle Progress Panel */}
-        <motion.div 
-          initial={{ opacity: 0, y: 8 }}
+
+        {/* Cycle status */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="glass-panel p-6 relative overflow-hidden"
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         >
-          {/* Subtle cosmic background gradient */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-brand-primary/5 rounded-full blur-3xl -z-10" />
-          <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-brand-accent/5 rounded-full blur-3xl -z-10" />
-          
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <span className="text-[10px] uppercase tracking-widest text-brand-primary font-bold">Active Savings Round</span>
-              <h2 className="text-3xl font-extrabold text-text-main mt-1.5 tracking-tight">Cycle #{currentCycle}</h2>
-            </div>
-            <div className="text-right">
-              <span className="text-[10px] uppercase tracking-widest text-brand-accent font-bold">Current Pot</span>
-              <div className="text-3xl font-extrabold text-brand-accent mt-1.5 tracking-tight">
-                {totalPot} <span className="text-xs font-semibold text-text-muted">XLM</span>
+          <Card>
+            {/* Top row */}
+            <div
+              className="flex items-start justify-between p-6 pb-5"
+              style={{ borderBottom: `1px solid ${S.border}` }}
+            >
+              <div>
+                <Label>Active round</Label>
+                <div
+                  className="text-4xl font-light mt-1 tracking-tight"
+                  style={{ color: S.text1 }}
+                >
+                  Cycle #{currentCycle}
+                </div>
+              </div>
+              <div className="text-right">
+                <Label>Current pot</Label>
+                <div className="mt-1 flex items-baseline gap-1.5">
+                  <span
+                    className="text-4xl font-light tracking-tight"
+                    style={{ color: S.accent }}
+                  >
+                    {totalPot}
+                  </span>
+                  <span className="text-xs" style={{ color: S.text3 }}>XLM</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Progress Bar */}
-          <div className="space-y-3 mb-6">
-            <div className="flex justify-between text-xs text-text-muted">
-              <span>Contributions Received</span>
-              <span className="font-bold text-text-main">{contributionsCount} of {totalMembersCount} ({Math.round(progressPercent)}%)</span>
+            {/* Progress */}
+            <div className="p-6 space-y-3">
+              <div className="flex justify-between items-center">
+                <Label>Contributions received</Label>
+                <span className="text-xs font-medium" style={{ color: S.text2 }}>
+                  {contributionsCount} / {totalMembersCount}
+                </span>
+              </div>
+              <div
+                className="w-full h-1.5 overflow-hidden"
+                style={{ background: S.bg0, borderRadius: "1px" }}
+              >
+                <motion.div
+                  style={{ background: S.accent, height: "100%", borderRadius: "1px" }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPercent}%` }}
+                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                />
+              </div>
             </div>
-            <div className="w-full h-2 bg-bg-base/80 rounded-full overflow-hidden border border-panel-border/60">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-brand-primary to-brand-accent"
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercent}%` }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4 pt-5 border-t border-panel-border/40 text-sm">
-            <div className="p-4 bg-bg-base/35 rounded-xl border border-panel-border/30">
-              <span className="text-[10px] uppercase tracking-widest text-text-subtle block font-bold mb-1">Target Payout</span>
-              <span className="text-lg font-bold text-text-main">{expectedTotalPot} XLM</span>
-            </div>
-            <div className="p-4 bg-bg-base/35 rounded-xl border border-panel-border/30">
-              <span className="text-[10px] uppercase tracking-widest text-text-subtle block font-bold mb-1">Cycle Recipient</span>
-              <span className="text-lg font-bold text-brand-accent block truncate" title={nextPayoutRecipient}>
-                {isRecipient ? "You" : formatAddress(nextPayoutRecipient)}
-              </span>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Action Panel */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-          className="glass-panel p-6"
-        >
-          <h3 className="text-lg font-bold text-text-main mb-4 tracking-tight">Actions</h3>
-          
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={() => contribute(publicKey)}
-              disabled={!publicKey || hasUserContributed || pendingTx}
-              className="btn btn-primary flex-1 py-3 text-sm cursor-pointer"
+            {/* Bottom stats */}
+            <div
+              className="grid grid-cols-2"
+              style={{ borderTop: `1px solid ${S.border}` }}
             >
-              {pendingTx ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing...
-                </span>
-              ) : hasUserContributed ? (
-                <span className="flex items-center gap-2 text-state-success font-semibold">
-                  <CheckCircle2 className="w-4.5 h-4.5" />
-                  Contributed ({contributionAmount} XLM)
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Coins className="w-4.5 h-4.5" />
-                  Contribute {contributionAmount} XLM
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={triggerPayout}
-              disabled={contributionsCount < totalMembersCount || pendingTx}
-              className="btn btn-accent flex-1 py-3 text-sm cursor-pointer"
-            >
-              {pendingTx ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
-                  Releasing...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <ArrowRightLeft className="w-4.5 h-4.5" />
-                  Release Payout ({expectedTotalPot} XLM)
-                </span>
-              )}
-            </button>
-          </div>
-
-          {!publicKey && (
-            <p className="text-xs text-brand-accent/80 text-center mt-3 font-semibold tracking-wide">
-              * Connect your wallet to contribute to the circle.
-            </p>
-          )}
-
-          {publicKey && !hasUserContributed && (
-            <p className="text-xs text-text-muted text-center mt-3 font-medium">
-              Your wallet balance: <span className="text-text-main font-bold">{parseFloat(balance).toFixed(2)} XLM</span>
-            </p>
-          )}
-
-          {/* Auto Simulator Switch */}
-          <div className="mt-6 pt-6 border-t border-panel-border/40 flex items-center justify-between">
-            <div>
-              <h4 className="font-bold text-text-main flex items-center gap-2 text-sm tracking-tight">
-                Simulate Circle Activity
-                <span className="text-[9px] uppercase font-bold tracking-widest bg-panel-border text-brand-primary px-2 py-0.5 rounded border border-panel-border/50">Mock Only</span>
-              </h4>
-              <p className="text-xs text-text-muted mt-0.5">Let mock members make contributions to trigger live updates.</p>
-            </div>
-            <button
-              onClick={() => setAutoSimulate(!autoSimulate)}
-              className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
-                autoSimulate 
-                  ? "bg-brand-primary/10 border-brand-primary/20 text-brand-primary shadow-sm" 
-                  : "bg-bg-base/60 border-panel-border text-text-muted hover:border-panel-border-hover hover:text-text-main"
-              }`}
-              title={autoSimulate ? "Pause Simulation" : "Start Simulation"}
-            >
-              {autoSimulate ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Live Transaction Log */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          className="glass-panel p-6"
-        >
-          <h3 className="text-lg font-bold text-text-main mb-4 flex items-center gap-2 tracking-tight">
-            <Clock className="w-5 h-5 text-brand-primary" />
-            Live Activity
-          </h3>
-
-          <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-            <AnimatePresence initial={false}>
-              {transactions.length === 0 ? (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-8 text-text-subtle text-xs font-semibold"
+              <div
+                className="p-5"
+                style={{ borderRight: `1px solid ${S.border}` }}
+              >
+                <Label>Target payout</Label>
+                <div
+                  className="text-xl font-light mt-1"
+                  style={{ color: S.text1 }}
                 >
-                  No transactions recorded in this session yet.
-                </motion.div>
-              ) : (
-                transactions.map((tx) => (
-                  <motion.div
-                    key={tx.id}
-                    initial={{ opacity: 0, x: -16, height: 0 }}
-                    animate={{ opacity: 1, x: 0, height: "auto" }}
-                    exit={{ opacity: 0, x: 16, height: 0 }}
-                    className="p-3 bg-bg-base/30 rounded-xl border border-panel-border/60 flex items-center justify-between text-xs"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg border ${
-                        tx.type === "contribute" 
-                          ? "bg-[#182d21]/60 text-state-success border-state-success-border/20" 
-                          : tx.type === "payout"
-                          ? "bg-[#182b2f]/60 text-brand-accent border-brand-accent/20"
-                          : "bg-[#241f3d]/60 text-brand-primary border-brand-primary/20"
-                      }`}>
-                        {tx.type === "contribute" ? <Coins className="w-4 h-4" /> : tx.type === "payout" ? <ArrowRightLeft className="w-4 h-4" /> : <Users className="w-4 h-4" />}
-                      </div>
-                      <div>
-                        <p className="text-text-main font-semibold">
-                          {tx.type === "contribute" ? (
-                            <span>Contribution from <span className="font-bold text-text-muted">{formatAddress(tx.member || "")}</span></span>
-                          ) : tx.type === "payout" ? (
-                            <span>Payout released to <span className="font-bold text-brand-accent">{formatAddress(tx.member || "")}</span></span>
-                          ) : (
-                            <span>Circle created</span>
-                          )}
-                        </p>
-                        <span className="text-[10px] text-text-subtle block mt-0.5 font-medium">Cycle #{tx.cycleId} • {new Date(tx.timestamp).toLocaleTimeString()}</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      {tx.amount && <span className="text-text-main font-bold block">{tx.amount} XLM</span>}
-                      {tx.hash && (
-                        <a 
-                          href={`https://stellar.expert/explorer/testnet/tx/${tx.hash}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[10px] text-brand-primary hover:text-brand-primary-hover font-semibold inline-flex items-center gap-0.5 mt-0.5 transition-colors"
-                        >
-                          hash
-                          <ArrowUpRight className="w-2.5 h-2.5" />
-                        </a>
-                      )}
-                    </div>
-                  </motion.div>
-                ))
+                  {expectedTotalPot} XLM
+                </div>
+              </div>
+              <div className="p-5">
+                <Label>This cycle&apos;s recipient</Label>
+                <div
+                  className="text-xl font-light mt-1 truncate"
+                  style={{ color: isRecipient ? S.accent : S.text1 }}
+                  title={nextPayoutRecipient}
+                >
+                  {isRecipient ? "You ✦" : formatAddress(nextPayoutRecipient)}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <Card>
+            <div className="p-6" style={{ borderBottom: `1px solid ${S.border}` }}>
+              <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: S.text3 }}>
+                Actions
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => contribute(publicKey)}
+                  disabled={!publicKey || hasUserContributed || pendingTx}
+                  className="btn btn-primary flex-1 py-3 cursor-pointer"
+                >
+                  {pendingTx ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                      Processing…
+                    </>
+                  ) : hasUserContributed ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      Contributed ({contributionAmount} XLM)
+                    </>
+                  ) : (
+                    <>
+                      <Coins className="w-4 h-4" />
+                      Contribute {contributionAmount} XLM
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={triggerPayout}
+                  disabled={contributionsCount < totalMembersCount || pendingTx}
+                  className="btn btn-secondary flex-1 py-3 cursor-pointer"
+                >
+                  {pendingTx ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                      Releasing…
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRightLeft className="w-4 h-4" />
+                      Release Payout ({expectedTotalPot} XLM)
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {!publicKey && (
+                <p className="text-xs text-center" style={{ color: S.accent }}>
+                  Connect your wallet to contribute.
+                </p>
               )}
-            </AnimatePresence>
-          </div>
+
+              {publicKey && !hasUserContributed && (
+                <p className="text-xs text-center" style={{ color: S.text3 }}>
+                  Balance:{" "}
+                  <span style={{ color: S.text2 }}>
+                    {parseFloat(balance).toFixed(2)} XLM
+                  </span>
+                </p>
+              )}
+            </div>
+
+            {/* Auto-simulate toggle */}
+            <div
+              className="flex items-center justify-between px-6 py-4"
+              style={{ borderTop: `1px solid ${S.border}` }}
+            >
+              <div>
+                <p className="text-sm font-medium" style={{ color: S.text1 }}>
+                  Simulate circle activity
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: S.text3 }}>
+                  Mock members make automatic contributions.{" "}
+                  <span style={{ color: S.accent }}>Mock mode only.</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setAutoSimulate(!autoSimulate)}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs uppercase tracking-widest font-semibold transition-all cursor-pointer"
+                style={{
+                  background: autoSimulate ? S.accentBg : "transparent",
+                  border: `1px solid ${autoSimulate ? S.accentBorder : S.border}`,
+                  color: autoSimulate ? S.accent : S.text3,
+                  borderRadius: "2px",
+                }}
+                title={autoSimulate ? "Pause" : "Run"}
+              >
+                {autoSimulate ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                {autoSimulate ? "Pause" : "Run"}
+              </button>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Live activity */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <Card>
+            <div
+              className="flex items-center gap-2 p-6"
+              style={{ borderBottom: `1px solid ${S.border}` }}
+            >
+              <Clock className="w-4 h-4" style={{ color: S.accent }} />
+              <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: S.text3 }}>
+                Live activity
+              </p>
+            </div>
+            <div className="p-3 max-h-64 overflow-y-auto">
+              <AnimatePresence initial={false}>
+                {transactions.length === 0 ? (
+                  <div className="py-10 text-center text-xs" style={{ color: S.text3 }}>
+                    No transactions yet.
+                  </div>
+                ) : (
+                  transactions.map((tx) => (
+                    <motion.div
+                      key={tx.id}
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex items-center justify-between px-4 py-3"
+                      style={{ borderBottom: `1px solid ${S.border}` }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-7 h-7 flex items-center justify-center shrink-0"
+                          style={{
+                            background:
+                              tx.type === "contribute" ? S.successBg :
+                              tx.type === "payout"     ? S.accentBg :
+                              S.bg2,
+                            color:
+                              tx.type === "contribute" ? S.success :
+                              tx.type === "payout"     ? S.accent :
+                              S.text2,
+                            border: `1px solid ${
+                              tx.type === "contribute" ? "oklch(72% 0.14 145 / 0.2)" :
+                              tx.type === "payout"     ? S.accentBorder :
+                              S.border
+                            }`,
+                            borderRadius: "2px",
+                          }}
+                        >
+                          {tx.type === "contribute" ? <Coins className="w-3.5 h-3.5" /> :
+                           tx.type === "payout"     ? <ArrowRightLeft className="w-3.5 h-3.5" /> :
+                           <Users className="w-3.5 h-3.5" />}
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium" style={{ color: S.text1 }}>
+                            {tx.type === "contribute"
+                              ? <>Contribution from <span style={{ color: S.text2 }}>{formatAddress(tx.member || "")}</span></>
+                              : tx.type === "payout"
+                              ? <>Payout → <span style={{ color: S.accent }}>{formatAddress(tx.member || "")}</span></>
+                              : "Circle created"}
+                          </p>
+                          <p className="text-[10px] mt-0.5" style={{ color: S.text3 }}>
+                            Cycle #{tx.cycleId} · {new Date(tx.timestamp).toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        {tx.amount && (
+                          <span className="text-xs font-medium" style={{ color: S.text1 }}>
+                            {tx.amount} XLM
+                          </span>
+                        )}
+                        {tx.hash && (
+                          <a
+                            href={`https://stellar.expert/explorer/testnet/tx/${tx.hash}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-0.5 text-[10px] mt-0.5"
+                            style={{ color: S.accent }}
+                          >
+                            view <ArrowUpRight className="w-2.5 h-2.5" />
+                          </a>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </AnimatePresence>
+            </div>
+          </Card>
         </motion.div>
       </div>
 
-      {/* Right Col: Circle Members */}
+      {/* ── Right col: members ─────────────────────────────────── */}
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-        className="glass-panel p-6 space-y-4"
+        transition={{ duration: 0.35, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div className="flex justify-between items-center pb-3 border-b border-panel-border/55">
-          <h3 className="text-lg font-bold text-text-main flex items-center gap-2 tracking-tight">
-            <Users className="w-5 h-5 text-brand-primary" />
-            Members ({members.length})
-          </h3>
-        </div>
+        <Card>
+          <div
+            className="flex items-center gap-2 p-6"
+            style={{ borderBottom: `1px solid ${S.border}` }}
+          >
+            <Users className="w-4 h-4" style={{ color: S.accent }} />
+            <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: S.text3 }}>
+              Members ({members.length})
+            </p>
+          </div>
+          <div>
+            {members.map((member, index) => {
+              const isUser          = member === publicKey;
+              const hasContributed  = contributedThisCycle.includes(member);
+              const isNextRecipient = member === nextPayoutRecipient;
 
-        <div className="space-y-3">
-          {members.map((member, index) => {
-            const isUser = member === publicKey;
-            const hasContributed = contributedThisCycle.includes(member);
-            const isNextRecipient = member === nextPayoutRecipient;
-
-            return (
-              <motion.div 
-                key={member}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.12 + index * 0.04, ease: [0.16, 1, 0.3, 1] }}
-                className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
-                  isNextRecipient 
-                    ? "bg-[#182b2f]/30 border-brand-accent/25 hover:border-brand-accent/40" 
-                    : isUser 
-                    ? "bg-[#241f3d]/30 border-brand-primary/25 hover:border-brand-primary/40" 
-                    : "bg-bg-base/40 border-panel-border hover:border-panel-border-hover"
-                }`}
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                    isNextRecipient 
-                      ? "bg-[#182b2f]/70 text-brand-accent border border-brand-accent/25" 
-                      : isUser 
-                      ? "bg-[#241f3d]/70 text-brand-primary border border-brand-primary/25" 
-                      : "bg-bg-base text-text-muted border border-panel-border/70"
-                  }`}>
-                    {index + 1}
+              return (
+                <motion.div
+                  key={member}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.08 + index * 0.04 }}
+                  className="flex items-center justify-between px-5 py-4"
+                  style={{
+                    borderBottom: `1px solid ${S.border}`,
+                    background:
+                      isNextRecipient ? "oklch(78% 0.15 85 / 0.04)" :
+                      isUser          ? "oklch(17% 0.008 85 / 0.5)" :
+                      "transparent",
+                  }}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    {/* Index badge */}
+                    <div
+                      className="w-7 h-7 shrink-0 flex items-center justify-center text-[11px] font-semibold"
+                      style={{
+                        background: isNextRecipient ? S.accentBg : S.bg2,
+                        color: isNextRecipient ? S.accent : S.text3,
+                        border: `1px solid ${isNextRecipient ? S.accentBorder : S.border}`,
+                        borderRadius: "2px",
+                      }}
+                    >
+                      {index + 1}
+                    </div>
+                    <div className="min-w-0">
+                      <p
+                        className="text-xs font-medium truncate"
+                        style={{ color: isUser ? S.accent : S.text1 }}
+                        title={member}
+                      >
+                        {isUser ? `${formatAddress(member)} (you)` : formatAddress(member)}
+                      </p>
+                      {isNextRecipient && (
+                        <p className="text-[10px] uppercase tracking-widest mt-0.5" style={{ color: S.accent }}>
+                          recipient
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <span className="text-sm font-semibold text-text-main block truncate" title={member}>
-                      {isUser ? `${formatAddress(member)} (You)` : formatAddress(member)}
-                    </span>
-                    <span className="text-[10px] text-text-subtle block font-medium">Member since creation</span>
-                  </div>
-                </div>
 
-                <div className="flex flex-col items-end gap-1.5">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                    hasContributed 
-                      ? "bg-[#182d21]/60 text-state-success border-state-success-border/20" 
-                      : "bg-bg-base/60 text-text-subtle border-panel-border/70"
-                  }`}>
-                    {hasContributed ? "Paid" : "Unpaid"}
+                  {/* Status */}
+                  <span
+                    className="text-[10px] uppercase tracking-widest font-semibold px-2 py-0.5 shrink-0"
+                    style={{
+                      background: hasContributed ? "oklch(72% 0.14 145 / 0.1)" : S.bg2,
+                      color: hasContributed ? S.success : S.text3,
+                      border: `1px solid ${hasContributed ? "oklch(72% 0.14 145 / 0.2)" : S.border}`,
+                      borderRadius: "2px",
+                    }}
+                  >
+                    {hasContributed ? "paid" : "—"}
                   </span>
-                  
-                  {isNextRecipient && (
-                    <span className="text-[9px] uppercase tracking-widest font-bold text-brand-accent flex items-center gap-0.5">
-                      Recipient
-                    </span>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </Card>
       </motion.div>
     </div>
   );
