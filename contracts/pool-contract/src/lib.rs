@@ -131,6 +131,9 @@ mod tests {
     use soroban_sdk::testutils::Address as _;
     use soroban_sdk::token::{Client as TokenClient, StellarAssetClient};
 
+    // ----------------------------------------------------------------
+    // Happy path: all members contribute, cycle 0 payout to member[0]
+    // ----------------------------------------------------------------
     #[test]
     fn test_successful_cycle() {
         let env = Env::default();
@@ -290,5 +293,209 @@ mod tests {
 
         client.payout(&0);
     }
-}
 
+    // ----------------------------------------------------------------
+    // Edge-case 1: member tries to contribute a second time in same cycle
+    // ----------------------------------------------------------------
+    #[test]
+    #[should_panic(expected = "member already contributed for this cycle")]
+    fn test_double_contribution() {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let admin = Address::generate(&env);
+        let sac = env.register_stellar_asset_contract_v2(admin);
+        let token_address = sac.address();
+        let sac_client = StellarAssetClient::new(&env, &token_address);
+
+        let registry_id = env.register(member_registry::MemberRegistry, ());
+        let registry_client = member_registry::MemberRegistryClient::new(&env, &registry_id);
+
+        let contract_id = env.register(PoolContract, ());
+        let client = PoolContractClient::new(&env, &contract_id);
+
+        client.initialize(&token_address, &registry_id);
+
+        let member_a = Address::generate(&env);
+        let member_b = Address::generate(&env);
+        let members = vec![&env, member_a.clone(), member_b.clone()];
+
+        registry_client.register_members(&members);
+        client.create_circle(&members, &100, &10);
+
+        // Fund for two contributions
+        sac_client.mint(&member_a, &200);
+        client.contribute(&member_a, &0);
+        // Second call must panic
+        client.contribute(&member_a, &0);
+    }
+
+    // ----------------------------------------------------------------
+    // Edge-case 2: create_circle with empty members vec must panic
+    // ----------------------------------------------------------------
+    #[test]
+    #[should_panic(expected = "must have members")]
+    fn test_create_empty_circle() {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let admin = Address::generate(&env);
+        let sac = env.register_stellar_asset_contract_v2(admin);
+        let token_address = sac.address();
+
+        let registry_id = env.register(member_registry::MemberRegistry, ());
+
+        let contract_id = env.register(PoolContract, ());
+        let client = PoolContractClient::new(&env, &contract_id);
+
+        client.initialize(&token_address, &registry_id);
+
+        // Empty vec — must reject
+        client.create_circle(&vec![&env], &100, &10);
+    }
+
+    // ----------------------------------------------------------------
+    // Edge-case 3: contributing to an already-closed cycle must panic
+    // ----------------------------------------------------------------
+    #[test]
+    #[should_panic(expected = "cycle already paid out")]
+    fn test_contribute_after_payout() {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let admin = Address::generate(&env);
+        let sac = env.register_stellar_asset_contract_v2(admin);
+        let token_address = sac.address();
+        let sac_client = StellarAssetClient::new(&env, &token_address);
+
+        let registry_id = env.register(member_registry::MemberRegistry, ());
+        let registry_client = member_registry::MemberRegistryClient::new(&env, &registry_id);
+
+        let contract_id = env.register(PoolContract, ());
+        let client = PoolContractClient::new(&env, &contract_id);
+
+        client.initialize(&token_address, &registry_id);
+
+        let member_a = Address::generate(&env);
+        let member_b = Address::generate(&env);
+        let members = vec![&env, member_a.clone(), member_b.clone()];
+
+        registry_client.register_members(&members);
+        client.create_circle(&members, &100, &10);
+
+        // Complete cycle 0 legitimately
+        sac_client.mint(&member_a, &100);
+        sac_client.mint(&member_b, &100);
+        client.contribute(&member_a, &0);
+        client.contribute(&member_b, &0);
+        client.payout(&0);
+
+        // Late contribution to closed cycle — must panic
+        sac_client.mint(&member_a, &100);
+        client.contribute(&member_a, &0);
+    }
+
+    // ----------------------------------------------------------------
+    // Edge-case 4: single-member circle pays itself back
+    // ----------------------------------------------------------------
+    #[test]
+    fn test_single_member_cycle() {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let admin = Address::generate(&env);
+        let sac = env.register_stellar_asset_contract_v2(admin);
+        let token_address = sac.address();
+        let sac_client = StellarAssetClient::new(&env, &token_address);
+        let token_client = TokenClient::new(&env, &token_address);
+
+        let registry_id = env.register(member_registry::MemberRegistry, ());
+        let registry_client = member_registry::MemberRegistryClient::new(&env, &registry_id);
+
+        let contract_id = env.register(PoolContract, ());
+        let client = PoolContractClient::new(&env, &contract_id);
+
+        client.initialize(&token_address, &registry_id);
+
+        let sole_member = Address::generate(&env);
+        let members = vec![&env, sole_member.clone()];
+
+        registry_client.register_members(&members);
+        client.create_circle(&members, &500, &5);
+
+        sac_client.mint(&sole_member, &500);
+        assert_eq!(token_client.balance(&sole_member), 500);
+
+        client.contribute(&sole_member, &0);
+        assert_eq!(token_client.balance(&sole_member), 0); // held in escrow
+
+        client.payout(&0);
+        assert_eq!(token_client.balance(&sole_member), 500); // returned in full
+    }
+
+    // ----------------------------------------------------------------
+    // Edge-case 5: payout recipient rotates across three cycles
+    // ----------------------------------------------------------------
+    #[test]
+    fn test_payout_recipient_rotates() {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let admin = Address::generate(&env);
+        let sac = env.register_stellar_asset_contract_v2(admin);
+        let token_address = sac.address();
+        let sac_client = StellarAssetClient::new(&env, &token_address);
+        let token_client = TokenClient::new(&env, &token_address);
+
+        let registry_id = env.register(member_registry::MemberRegistry, ());
+        let registry_client = member_registry::MemberRegistryClient::new(&env, &registry_id);
+
+        let contract_id = env.register(PoolContract, ());
+        let client = PoolContractClient::new(&env, &contract_id);
+
+        client.initialize(&token_address, &registry_id);
+
+        let m0 = Address::generate(&env);
+        let m1 = Address::generate(&env);
+        let m2 = Address::generate(&env);
+        let members = vec![&env, m0.clone(), m1.clone(), m2.clone()];
+
+        registry_client.register_members(&members);
+        client.create_circle(&members, &100, &10);
+
+        // Fund all for 3 cycles (300 each)
+        for m in members.iter() {
+            sac_client.mint(&m, &300);
+        }
+
+        // Cycle 0 – m0 receives 300
+        for m in members.iter() { client.contribute(&m, &0); }
+        client.payout(&0);
+        let bal0_c0 = token_client.balance(&m0);
+        let bal1_c0 = token_client.balance(&m1);
+        let bal2_c0 = token_client.balance(&m2);
+        // m0 paid 100 and received 300 → net +200 → 200 + 300 = 400? No:
+        // started 300, paid 100 (now 200), received 300 (now 500... wait)
+        // Actually: token_client tracks absolute balances after transfer.
+        // m0: 300 - 100 + 300 = 500, m1: 300 - 100 = 200, m2: 300 - 100 = 200
+        assert_eq!(bal0_c0, 500, "m0 should receive cycle 0 payout");
+        assert_eq!(bal1_c0, 200);
+        assert_eq!(bal2_c0, 200);
+
+        // Cycle 1 – m1 receives 300
+        for m in members.iter() { client.contribute(&m, &1); }
+        client.payout(&1);
+        // m0: 500 - 100 = 400, m1: 200 - 100 + 300 = 400, m2: 200 - 100 = 100
+        assert_eq!(token_client.balance(&m0), 400);
+        assert_eq!(token_client.balance(&m1), 400, "m1 should receive cycle 1 payout");
+        assert_eq!(token_client.balance(&m2), 100);
+
+        // Cycle 2 – m2 receives 300
+        for m in members.iter() { client.contribute(&m, &2); }
+        client.payout(&2);
+        // m0: 400 - 100 = 300, m1: 400 - 100 = 300, m2: 100 - 100 + 300 = 300
+        assert_eq!(token_client.balance(&m0), 300);
+        assert_eq!(token_client.balance(&m1), 300);
+        assert_eq!(token_client.balance(&m2), 300, "m2 should receive cycle 2 payout");
+    }
+}
