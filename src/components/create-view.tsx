@@ -176,6 +176,7 @@ export function CreateView() {
             />
             <button
               type="submit"
+              data-testid="add-member-btn"
               className="btn btn-secondary px-4 cursor-pointer"
               style={{ minWidth: "44px" }}
             >
