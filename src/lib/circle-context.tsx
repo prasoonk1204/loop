@@ -89,9 +89,13 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
 
   const connect = (address: string, name: string, balance: string) => {
     setState((prev) => {
-      const updatedMembers = [...prev.members];
+      let updatedMembers = [...prev.members];
       if (address && !updatedMembers.includes(address)) {
         updatedMembers.unshift(address);
+      }
+      // If we connected in Soroban mode, filter out mock members if any got in
+      if (prev.mode === "soroban" && address) {
+        updatedMembers = [address];
       }
       return {
         ...prev,
@@ -99,7 +103,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
         walletName: name,
         balance,
         members: updatedMembers,
-        nextPayoutRecipient: updatedMembers[prev.currentCycle % updatedMembers.length],
+        nextPayoutRecipient: updatedMembers[prev.currentCycle % updatedMembers.length] || "",
       };
     });
     addToast(`Connected with ${name}`, "success");
@@ -111,6 +115,8 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       publicKey: "",
       walletName: "",
       balance: "0",
+      members: prev.mode === "soroban" ? [] : INITIAL_MOCK_MEMBERS,
+      nextPayoutRecipient: prev.mode === "soroban" ? "" : INITIAL_MOCK_MEMBERS[0],
     }));
     addToast("Disconnected wallet", "info");
   };
@@ -120,7 +126,33 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setMode = (mode: "mock" | "soroban") => {
-    setState((prev) => ({ ...prev, mode }));
+    setState((prev) => {
+      if (mode === "soroban") {
+        return {
+          ...prev,
+          mode,
+          poolContractId: process.env.NEXT_PUBLIC_SOROBAN_POOL_CONTRACT_ID || "",
+          registryContractId: process.env.NEXT_PUBLIC_SOROBAN_REGISTRY_CONTRACT_ID || "",
+          tokenContractId: process.env.NEXT_PUBLIC_SOROBAN_TOKEN_CONTRACT_ID || "",
+          members: prev.publicKey ? [prev.publicKey] : [],
+          contributedThisCycle: [],
+          nextPayoutRecipient: prev.publicKey || "",
+          transactions: [],
+        };
+      } else {
+        const mockMembers = prev.publicKey ? [prev.publicKey, ...INITIAL_MOCK_MEMBERS.filter(m => m !== prev.publicKey)] : INITIAL_MOCK_MEMBERS;
+        return {
+          ...prev,
+          mode,
+          poolContractId: "CC...POOL",
+          registryContractId: "CC...REGISTRY",
+          tokenContractId: "CC...TOKEN",
+          members: mockMembers,
+          nextPayoutRecipient: mockMembers[prev.currentCycle % mockMembers.length] || "",
+          transactions: [],
+        };
+      }
+    });
     addToast(`Switched to ${mode} mode`, "info");
   };
 

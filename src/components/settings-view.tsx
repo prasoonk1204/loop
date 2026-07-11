@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useCircle } from "@/lib/circle-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings, Cpu, Network, Save, ShieldCheck } from "lucide-react";
+import { STELLAR_HORIZON_URL } from "@/lib/stellar";
 
 const S = {
   bg0:          "oklch(10% 0.008 85)",
@@ -50,7 +51,7 @@ export function SettingsView() {
   const [localPool, setLocalPool]         = useState(poolContractId);
   const [localRegistry, setLocalRegistry] = useState(registryContractId);
   const [localToken, setLocalToken]       = useState(tokenContractId);
-  const [horizonUrl, setHorizonUrl]       = useState("https://horizon-testnet.stellar.org");
+  const [horizonUrl, setHorizonUrl]       = useState(STELLAR_HORIZON_URL);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
