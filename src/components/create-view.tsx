@@ -15,18 +15,27 @@ import {
 
 export function CreateView() {
   const router = useRouter();
-  const { createCircle, publicKey, addToast } = useCircle();
+  const { createCircle, publicKey, mode, addToast } = useCircle();
   const [amount, setAmount] = useState("100");
   const [length, setLength] = useState("10");
   const [newMember, setNewMember] = useState("");
   
   // Default member list (pre-filled for ease of use)
-  const [members, setMembers] = useState<string[]>([
-    publicKey || "GB7VKJ...3M6K7",
-    "GDFO7R...4R4E2",
-    "GATYK9...JK9P1",
-    "GCOO4S...XS4X8"
-  ]);
+  const [members, setMembers] = useState<string[]>([]);
+
+  // Sync members list when mode or connected wallet changes
+  React.useEffect(() => {
+    if (mode === "soroban") {
+      setMembers(publicKey ? [publicKey] : []);
+    } else {
+      setMembers([
+        publicKey || "GB7VKJ...3M6K7",
+        "GDFO7R...4R4E2",
+        "GATYK9...JK9P1",
+        "GCOO4S...XS4X8"
+      ]);
+    }
+  }, [mode, publicKey]);
 
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault();

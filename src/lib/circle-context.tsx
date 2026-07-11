@@ -126,6 +126,9 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setMode = (mode: "mock" | "soroban") => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("stellar-loop-mode", mode);
+    }
     setState((prev) => {
       if (mode === "soroban") {
         return {
@@ -371,6 +374,91 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
 
     return () => clearInterval(interval);
   }, [state.autoSimulate, state.contributedThisCycle, state.mode, triggerPayout]);
+
+  // Save state to localStorage on change
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stateToSave = {
+        publicKey: state.publicKey,
+        walletName: state.walletName,
+        balance: state.balance,
+        poolContractId: state.poolContractId,
+        registryContractId: state.registryContractId,
+        tokenContractId: state.tokenContractId,
+        members: state.members,
+        contributionAmount: state.contributionAmount,
+        cycleLength: state.cycleLength,
+        currentCycle: state.currentCycle,
+        contributedThisCycle: state.contributedThisCycle,
+        nextPayoutRecipient: state.nextPayoutRecipient,
+        transactions: state.transactions,
+        autoSimulate: state.autoSimulate,
+      };
+      localStorage.setItem("stellar-loop-circle-data", JSON.stringify(stateToSave));
+    }
+  }, [
+    state.publicKey,
+    state.walletName,
+    state.balance,
+    state.poolContractId,
+    state.registryContractId,
+    state.tokenContractId,
+    state.members,
+    state.contributionAmount,
+    state.cycleLength,
+    state.currentCycle,
+    state.contributedThisCycle,
+    state.nextPayoutRecipient,
+    state.transactions,
+    state.autoSimulate,
+  ]);
+
+  // Load mode and state from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedMode = localStorage.getItem("stellar-loop-mode") as "mock" | "soroban" | null;
+      const savedDataStr = localStorage.getItem("stellar-loop-circle-data");
+
+      setState((prev) => {
+        const updated = { ...prev };
+
+        if (savedMode) {
+          updated.mode = savedMode;
+          if (savedMode === "soroban" && !savedDataStr) {
+            updated.poolContractId = process.env.NEXT_PUBLIC_SOROBAN_POOL_CONTRACT_ID || "";
+            updated.registryContractId = process.env.NEXT_PUBLIC_SOROBAN_REGISTRY_CONTRACT_ID || "";
+            updated.tokenContractId = process.env.NEXT_PUBLIC_SOROBAN_TOKEN_CONTRACT_ID || "";
+            updated.members = [];
+            updated.nextPayoutRecipient = "";
+          }
+        }
+
+        if (savedDataStr) {
+          try {
+            const savedData = JSON.parse(savedDataStr);
+            if (savedData.publicKey !== undefined) updated.publicKey = savedData.publicKey;
+            if (savedData.walletName !== undefined) updated.walletName = savedData.walletName;
+            if (savedData.balance !== undefined) updated.balance = savedData.balance;
+            if (savedData.poolContractId !== undefined) updated.poolContractId = savedData.poolContractId;
+            if (savedData.registryContractId !== undefined) updated.registryContractId = savedData.registryContractId;
+            if (savedData.tokenContractId !== undefined) updated.tokenContractId = savedData.tokenContractId;
+            if (savedData.members !== undefined) updated.members = savedData.members;
+            if (savedData.contributionAmount !== undefined) updated.contributionAmount = savedData.contributionAmount;
+            if (savedData.cycleLength !== undefined) updated.cycleLength = savedData.cycleLength;
+            if (savedData.currentCycle !== undefined) updated.currentCycle = savedData.currentCycle;
+            if (savedData.contributedThisCycle !== undefined) updated.contributedThisCycle = savedData.contributedThisCycle;
+            if (savedData.nextPayoutRecipient !== undefined) updated.nextPayoutRecipient = savedData.nextPayoutRecipient;
+            if (savedData.transactions !== undefined) updated.transactions = savedData.transactions;
+            if (savedData.autoSimulate !== undefined) updated.autoSimulate = savedData.autoSimulate;
+          } catch (e) {
+            console.error("Failed to parse saved circle data", e);
+          }
+        }
+
+        return updated;
+      });
+    }
+  }, []);
 
   return (
     <CircleContext.Provider
