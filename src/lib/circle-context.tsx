@@ -1,6 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { scValToNative, nativeToScVal, Account, TransactionBuilder, Operation, xdr, rpc } from "@stellar/stellar-sdk";
+import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk";
+import { rpcServer, horizonServer, STELLAR_NETWORK_PASSPHRASE, nativeBalance } from "./stellar";
 
 export type Transaction = {
   id: string;
@@ -87,6 +90,177 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
     }, 4000);
   }, []);
 
+  const fetchCircleState = useCallback(async (contractId: string) => {
+    if (!contractId || contractId.startsWith("CC...")) return;
+    
+    try {
+      const sourceAddr = "GB7VKJ5WPR4DDR24FSAX5LIEM4J7AI3KOWJYANSXEPKYXCSZOTAYXE75";
+      const sourceAccount = new Account(sourceAddr, "0");
+
+      const simulateCall = async (method: string, args: any[] = []) => {
+        const tx = new TransactionBuilder(sourceAccount, {
+          fee: "100",
+          networkPassphrase: STELLAR_NETWORK_PASSPHRASE,
+        })
+          .addOperation(Operation.invokeContractFunction({
+            contract: contractId,
+            function: method,
+            args: args,
+          }))
+          .setTimeout(30)
+          .build();
+        const sim = await rpcServer.simulateTransaction(tx);
+        if (rpc.Api.isSimulationSuccess(sim) && sim.result) {
+          return scValToNative(sim.result.retval);
+        }
+        return null;
+      };
+
+      const rawMembers = await simulateCall("get_members") as string[] | null;
+      if (!rawMembers || rawMembers.length === 0) {
+        return;
+      }
+      
+      const contributionVal = await simulateCall("get_contribution_amount");
+      const contributionAmount = contributionVal !== null ? Number(contributionVal) : 100;
+      
+      const lengthVal = await simulateCall("get_cycle_length");
+      const cycleLength = lengthVal !== null ? Number(lengthVal) : 10;
+
+      let currentCycle = 0;
+      while (true) {
+        const paid = await simulateCall("is_cycle_paid", [nativeToScVal(BigInt(currentCycle), { type: "u64" })]);
+        if (paid === true) {
+          currentCycle++;
+        } else {
+          break;
+        }
+      }
+
+      const contributedThisCycle: string[] = [];
+      for (const m of rawMembers) {
+        const contributed = await simulateCall("is_contributed", [
+          nativeToScVal(BigInt(currentCycle), { type: "u64" }),
+          nativeToScVal(m, { type: "address" }),
+        ]);
+        if (contributed === true) {
+          contributedThisCycle.push(m);
+        }
+      }
+
+      const nextPayoutRecipient = rawMembers[currentCycle % rawMembers.length] || "";
+
+      setState((prev) => ({
+        ...prev,
+        members: rawMembers,
+        contributionAmount,
+        cycleLength,
+        currentCycle,
+        contributedThisCycle,
+        nextPayoutRecipient,
+      }));
+    } catch (e) {
+      console.error("Error fetching Soroban circle state:", e);
+    }
+  }, []);
+
+  const submitSorobanTransaction = useCallback(async (
+    functionName: string,
+    args: any[],
+    successMsg: string
+  ) => {
+    if (!state.publicKey) {
+      addToast("Connect wallet first", "error");
+      return false;
+    }
+    
+    setState((prev) => ({ ...prev, pendingTx: true }));
+    try {
+      const account = await rpcServer.getAccount(state.publicKey);
+      
+      const tx = new TransactionBuilder(account, {
+        fee: "100",
+        networkPassphrase: STELLAR_NETWORK_PASSPHRASE,
+      })
+        .addOperation(Operation.invokeContractFunction({
+          contract: state.poolContractId,
+          function: functionName,
+          args: args,
+        }))
+        .setTimeout(180)
+        .build();
+
+      addToast("Simulating transaction...", "info");
+      const preparedTx = await rpcServer.prepareTransaction(tx);
+
+      addToast("Please sign transaction in your wallet...", "info");
+      const { signedTxXdr } = await StellarWalletsKit.signTransaction(
+        preparedTx.toXDR(),
+        { address: state.publicKey, networkPassphrase: STELLAR_NETWORK_PASSPHRASE }
+      );
+      
+      const signedTx = TransactionBuilder.fromXDR(signedTxXdr, STELLAR_NETWORK_PASSPHRASE);
+      
+      addToast("Submitting transaction to network...", "info");
+      const sendResp = await rpcServer.sendTransaction(signedTx);
+      
+      if (sendResp.status === "ERROR") {
+        throw new Error(`RPC send error: ${JSON.stringify(sendResp.errorResult)}`);
+      }
+      
+      const txHash = sendResp.hash;
+      
+      addToast("Waiting for transaction confirmation...", "info");
+      let statusResp;
+      for (let attempt = 0; attempt < 30; attempt++) {
+        statusResp = await rpcServer.getTransaction(txHash);
+        if (statusResp.status === "SUCCESS") {
+          break;
+        }
+        if (statusResp.status === "FAILED") {
+          throw new Error("Transaction execution failed on-chain");
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+      
+      if (statusResp?.status !== "SUCCESS") {
+        throw new Error("Transaction confirmation timeout");
+      }
+
+      addToast(successMsg, "success");
+      
+      const newTx: Transaction = {
+        id: Math.random().toString(36).substr(2, 9),
+        type: functionName === "create_circle" ? "create" : (functionName === "contribute" ? "contribute" : "payout"),
+        member: state.publicKey,
+        amount: state.contributionAmount,
+        cycleId: state.currentCycle,
+        status: "success",
+        timestamp: Date.now(),
+        hash: txHash,
+      };
+      
+      setState((prev) => ({
+        ...prev,
+        transactions: [newTx, ...prev.transactions],
+      }));
+
+      await fetchCircleState(state.poolContractId);
+      
+      const horizonAccount = await horizonServer.loadAccount(state.publicKey);
+      const balance = nativeBalance(horizonAccount.balances);
+      setState((prev) => ({ ...prev, balance }));
+      
+      return true;
+    } catch (e: any) {
+      console.error(e);
+      addToast(`Transaction failed: ${e.message || e}`, "error");
+      return false;
+    } finally {
+      setState((prev) => ({ ...prev, pendingTx: false }));
+    }
+  }, [state.publicKey, state.poolContractId, state.contributionAmount, state.currentCycle, addToast, fetchCircleState]);
+
   const connect = (address: string, name: string, balance: string) => {
     setState((prev) => {
       let updatedMembers = [...prev.members];
@@ -107,6 +281,9 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       };
     });
     addToast(`Connected with ${name}`, "success");
+    if (state.mode === "soroban") {
+      fetchCircleState(state.poolContractId);
+    }
   };
 
   const disconnect = () => {
@@ -157,6 +334,10 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       }
     });
     addToast(`Switched to ${mode} mode`, "info");
+    if (mode === "soroban") {
+      const contractId = process.env.NEXT_PUBLIC_SOROBAN_POOL_CONTRACT_ID || "";
+      fetchCircleState(contractId);
+    }
   };
 
   const setContracts = (pool: string, registry: string, token: string) => {
@@ -170,12 +351,10 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
   };
 
   const createCircle = async (members: string[], amount: number, length: number) => {
-    setState((prev) => ({ ...prev, pendingTx: true }));
-    
-    // Simulate transaction delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
     if (state.mode === "mock") {
+      setState((prev) => ({ ...prev, pendingTx: true }));
+      // Simulate transaction delay
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       setState((prev) => ({
         ...prev,
         members,
@@ -200,17 +379,19 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       }));
       addToast("Savings circle created successfully!", "success");
     } else {
-      // In real Soroban Mode, this is a placeholder for contract calls
-      setState((prev) => ({ ...prev, pendingTx: false }));
-      addToast("Soroban create_circle transaction submitted", "info");
+      const args = [
+        xdr.ScVal.scvVec(members.map(m => nativeToScVal(m, { type: "address" }))),
+        nativeToScVal(BigInt(amount), { type: "i128" }),
+        nativeToScVal(BigInt(length), { type: "u64" }),
+      ];
+      await submitSorobanTransaction("create_circle", args, "Savings circle created on-chain!");
     }
   };
 
   const contribute = async (memberAddress: string) => {
-    setState((prev) => ({ ...prev, pendingTx: true }));
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
     if (state.mode === "mock") {
+      setState((prev) => ({ ...prev, pendingTx: true }));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       setState((prev) => {
         if (prev.contributedThisCycle.includes(memberAddress)) {
           addToast("Member has already contributed this cycle", "error");
@@ -230,7 +411,6 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
           hash: "tx_" + Math.random().toString(36).substr(2, 16),
         };
 
-        // Dispatch a mock window event so dashboard components can animate
         if (typeof window !== "undefined") {
           window.dispatchEvent(
             new CustomEvent("circle-event", {
@@ -249,19 +429,20 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       });
       addToast(`Contribution of ${state.contributionAmount} XLM recorded`, "success");
     } else {
-      setState((prev) => ({ ...prev, pendingTx: false }));
-      addToast("Soroban contribute transaction submitted", "info");
+      const args = [
+        nativeToScVal(state.publicKey, { type: "address" }),
+        nativeToScVal(BigInt(state.currentCycle), { type: "u64" }),
+      ];
+      await submitSorobanTransaction("contribute", args, `Contributed ${state.contributionAmount} XLM!`);
     }
   };
 
   const triggerPayout = useCallback(async () => {
-    setState((prev) => ({ ...prev, pendingTx: true }));
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
     if (state.mode === "mock") {
+      setState((prev) => ({ ...prev, pendingTx: true }));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       let isSuccess = false;
       setState((prev) => {
-        // Validate everyone contributed
         const allContributed = prev.members.every((m) => prev.contributedThisCycle.includes(m));
         if (!allContributed) {
           isSuccess = false;
@@ -311,10 +492,12 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
         addToast("Cannot release payout: not all members have contributed", "error");
       }
     } else {
-      setState((prev) => ({ ...prev, pendingTx: false }));
-      addToast("Soroban payout transaction submitted", "info");
+      const args = [
+        nativeToScVal(BigInt(state.currentCycle), { type: "u64" }),
+      ];
+      await submitSorobanTransaction("payout", args, `Cycle payout released!`);
     }
-  }, [state.mode, addToast]);
+  }, [state.mode, state.currentCycle, submitSorobanTransaction, addToast]);
 
   const setAutoSimulate = (simulate: boolean) => {
     setState((prev) => ({ ...prev, autoSimulate: simulate }));
@@ -457,8 +640,21 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
 
         return updated;
       });
+
+      if (savedMode === "soroban") {
+        let contractId = process.env.NEXT_PUBLIC_SOROBAN_POOL_CONTRACT_ID || "";
+        if (savedDataStr) {
+          try {
+            const savedData = JSON.parse(savedDataStr);
+            if (savedData.poolContractId) {
+              contractId = savedData.poolContractId;
+            }
+          } catch {}
+        }
+        fetchCircleState(contractId);
+      }
     }
-  }, []);
+  }, [fetchCircleState]);
 
   return (
     <CircleContext.Provider

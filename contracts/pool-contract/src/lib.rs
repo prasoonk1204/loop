@@ -122,6 +122,48 @@ impl PoolContract {
         // Mark cycle paid out locally
         env.storage().persistent().set(&paid_key, &true);
     }
+
+    pub fn get_token(env: Env) -> Address {
+        env.storage().instance().get(&DataKey::Token).unwrap()
+    }
+
+    pub fn get_registry(env: Env) -> Address {
+        env.storage().instance().get(&DataKey::Registry).unwrap()
+    }
+
+    pub fn get_members(env: Env) -> Vec<Address> {
+        if env.storage().instance().has(&DataKey::Members) {
+            env.storage().instance().get(&DataKey::Members).unwrap()
+        } else {
+            Vec::new(&env)
+        }
+    }
+
+    pub fn get_contribution_amount(env: Env) -> i128 {
+        if env.storage().instance().has(&DataKey::ContributionAmount) {
+            env.storage().instance().get(&DataKey::ContributionAmount).unwrap()
+        } else {
+            0
+        }
+    }
+
+    pub fn get_cycle_length(env: Env) -> u64 {
+        if env.storage().instance().has(&DataKey::CycleLength) {
+            env.storage().instance().get(&DataKey::CycleLength).unwrap()
+        } else {
+            0
+        }
+    }
+
+    pub fn is_contributed(env: Env, cycle_id: u64, member: Address) -> bool {
+        let key = DataKey::Contributed(cycle_id, member);
+        env.storage().persistent().has(&key)
+    }
+
+    pub fn is_cycle_paid(env: Env, cycle_id: u64) -> bool {
+        let paid_key = DataKey::CyclePaid(cycle_id);
+        env.storage().persistent().has(&paid_key)
+    }
 }
 
 #[cfg(test)]
