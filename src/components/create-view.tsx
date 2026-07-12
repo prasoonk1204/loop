@@ -4,11 +4,11 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCircle } from "@/lib/circle-context";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Plus, 
-  Trash2, 
-  Coins, 
-  Clock, 
+import {
+  Plus,
+  Trash2,
+  Coins,
+  Clock,
   ArrowRight,
   HelpCircle
 } from "lucide-react";
@@ -19,7 +19,7 @@ export function CreateView() {
   const [amount, setAmount] = useState("100");
   const [length, setLength] = useState("10");
   const [newMember, setNewMember] = useState("");
-  
+
   // Default member list (pre-filled for ease of use)
   const [members, setMembers] = useState<string[]>([]);
 
@@ -44,11 +44,14 @@ export function CreateView() {
     }
   }, [mode, publicKey]);
 
+  // Mark as intentional: initialize members from wallet/mode on mount
+
+
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault();
     const addr = newMember.trim();
     if (!addr) return;
-    
+
     // Quick validation: must be a string key or starting with G
     if (!addr.startsWith("G") || addr.length < 10) {
       addToast("Invalid Stellar address format", "error");
@@ -97,7 +100,7 @@ export function CreateView() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
         style={{ background: "oklch(13% 0.008 85)", border: "1px solid oklch(20% 0.006 85)", borderRadius: "4px" }}
       >
         <div className="px-6 py-5" style={{ borderBottom: "1px solid oklch(20% 0.006 85)" }}>
@@ -171,7 +174,7 @@ export function CreateView() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.35, delay: 0.06, ease: "easeOut" }}
         style={{ background: "oklch(13% 0.008 85)", border: "1px solid oklch(20% 0.006 85)", borderRadius: "4px" }}
       >
         <div className="px-6 py-5" style={{ borderBottom: "1px solid oklch(20% 0.006 85)" }}>
@@ -208,43 +211,47 @@ export function CreateView() {
                 return (
                   <motion.div
                     key={member}
-                    initial={{ opacity: 0, y: -8, height: 0 }}
-                    animate={{ opacity: 1, y: 0, height: "auto" }}
-                    exit={{ opacity: 0, y: -8, height: 0 }}
-                    className="flex items-center justify-between px-4 py-3"
-                    style={{
-                      borderBottom: "1px solid oklch(20% 0.006 85)",
-                      background: isUser ? "oklch(78% 0.15 85 / 0.04)" : "transparent",
-                      overflow: "hidden",
-                    }}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    style={{ overflow: "hidden" }}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className="w-6 h-6 shrink-0 flex items-center justify-center text-[11px] font-semibold"
-                        style={{
-                          background: "oklch(17% 0.008 85)",
-                          border: "1px solid oklch(25% 0.007 85)",
-                          color: "oklch(55% 0.007 85)",
-                          borderRadius: "2px",
-                        }}
-                      >
-                        {index + 1}
-                      </div>
-                      <span
-                        className="text-xs truncate max-w-[200px] block"
-                        style={{ color: isUser ? "oklch(78% 0.15 85)" : "oklch(80% 0.008 85)" }}
-                        title={member}
-                      >
-                        {member}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => handleRemoveMember(index)}
-                      className="p-1.5 transition-colors cursor-pointer shrink-0"
-                      style={{ color: "oklch(45% 0.005 85)" }}
+                    <div
+                      className="flex items-center justify-between px-4 py-3"
+                      style={{
+                        borderBottom: "1px solid oklch(20% 0.006 85)",
+                        background: isUser ? "oklch(78% 0.15 85 / 0.04)" : "transparent",
+                      }}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className="w-6 h-6 shrink-0 flex items-center justify-center text-[11px] font-semibold"
+                          style={{
+                            background: "oklch(17% 0.008 85)",
+                            border: "1px solid oklch(25% 0.007 85)",
+                            color: "oklch(55% 0.007 85)",
+                            borderRadius: "2px",
+                          }}
+                        >
+                          {index + 1}
+                        </div>
+                        <span
+                          className="text-xs truncate max-w-[200px] block"
+                          style={{ color: isUser ? "oklch(78% 0.15 85)" : "oklch(80% 0.008 85)" }}
+                          title={member}
+                        >
+                          {member}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveMember(index)}
+                        className="p-1.5 transition-colors cursor-pointer shrink-0"
+                        style={{ color: "oklch(45% 0.005 85)" }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </motion.div>
                 );
               })}

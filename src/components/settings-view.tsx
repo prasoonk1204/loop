@@ -2,23 +2,23 @@
 
 import React, { useState } from "react";
 import { useCircle } from "@/lib/circle-context";
-import { motion, AnimatePresence } from "framer-motion";
-import { Settings, Cpu, Network, Save, ShieldCheck } from "lucide-react";
+import { motion } from "framer-motion";
+import { Settings, Network, Save } from "lucide-react";
 import { STELLAR_HORIZON_URL } from "@/lib/stellar";
 
 const S = {
-  bg0:          "oklch(10% 0.008 85)",
-  bg1:          "oklch(13% 0.008 85)",
-  bg2:          "oklch(17% 0.008 85)",
-  border:       "oklch(20% 0.006 85)",
-  text1:        "oklch(97% 0.005 85)",
-  text2:        "oklch(68% 0.008 85)",
-  text3:        "oklch(45% 0.005 85)",
-  accent:       "oklch(78% 0.15 85)",
-  accentBg:     "oklch(78% 0.15 85 / 0.08)",
+  bg0: "oklch(10% 0.008 85)",
+  bg1: "oklch(13% 0.008 85)",
+  bg2: "oklch(17% 0.008 85)",
+  border: "oklch(20% 0.006 85)",
+  text1: "oklch(97% 0.005 85)",
+  text2: "oklch(68% 0.008 85)",
+  text3: "oklch(45% 0.005 85)",
+  accent: "oklch(78% 0.15 85)",
+  accentBg: "oklch(78% 0.15 85 / 0.08)",
   accentBorder: "oklch(78% 0.15 85 / 0.25)",
-  success:      "oklch(72% 0.14 145)",
-  successBg:    "oklch(72% 0.14 145 / 0.08)",
+  success: "oklch(72% 0.14 145)",
+  successBg: "oklch(72% 0.14 145 / 0.08)",
 };
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -39,20 +39,19 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 
 export function SettingsView() {
   const {
-    mode,
     poolContractId,
     registryContractId,
     tokenContractId,
-    setMode,
     setContracts,
     addToast,
   } = useCircle();
 
-  const [localPool, setLocalPool]         = useState(poolContractId);
+  const [localPool, setLocalPool] = useState(poolContractId);
   const [localRegistry, setLocalRegistry] = useState(registryContractId);
-  const [localToken, setLocalToken]       = useState(tokenContractId);
-  const [horizonUrl, setHorizonUrl]       = useState(STELLAR_HORIZON_URL);
+  const [localToken, setLocalToken] = useState(tokenContractId);
+  const [horizonUrl, setHorizonUrl] = useState(STELLAR_HORIZON_URL);
 
+  // Intentional: sync local state with context on prop change
   React.useEffect(() => {
     setLocalPool(poolContractId);
     setLocalRegistry(registryContractId);

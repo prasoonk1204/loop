@@ -36,11 +36,6 @@ jobs:
       - name: Run contract tests
         run: cargo test --workspace 2>&1
 
-      - name: Build WASM artifacts
-        run: |
-          cargo install stellar-cli --locked 2>/dev/null || true
-          stellar contract build
-
   # ─── Frontend tests (Vitest) ────────────────────────────────────────────────
   frontend-tests:
     name: Frontend Tests (Vitest)

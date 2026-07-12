@@ -8,28 +8,26 @@ import {
   Coins,
   Users,
   ArrowRightLeft,
-  Play,
-  Pause,
   CheckCircle2,
   Clock,
   ArrowUpRight,
 } from "lucide-react";
 
 const S = {
-  bg0:          "oklch(10% 0.008 85)",
-  bg1:          "oklch(13% 0.008 85)",
-  bg2:          "oklch(17% 0.008 85)",
-  border:       "oklch(20% 0.006 85)",
-  borderHover:  "oklch(28% 0.007 85)",
-  text1:        "oklch(97% 0.005 85)",
-  text2:        "oklch(68% 0.008 85)",
-  text3:        "oklch(45% 0.005 85)",
-  accent:       "oklch(78% 0.15 85)",
-  accentBg:     "oklch(78% 0.15 85 / 0.08)",
+  bg0: "oklch(10% 0.008 85)",
+  bg1: "oklch(13% 0.008 85)",
+  bg2: "oklch(17% 0.008 85)",
+  border: "oklch(20% 0.006 85)",
+  borderHover: "oklch(28% 0.007 85)",
+  text1: "oklch(97% 0.005 85)",
+  text2: "oklch(68% 0.008 85)",
+  text3: "oklch(45% 0.005 85)",
+  accent: "oklch(78% 0.15 85)",
+  accentBg: "oklch(78% 0.15 85 / 0.08)",
   accentBorder: "oklch(78% 0.15 85 / 0.25)",
-  success:      "oklch(72% 0.14 145)",
-  successBg:    "oklch(18% 0.03 145)",
-  error:        "oklch(65% 0.16 20)",
+  success: "oklch(72% 0.14 145)",
+  successBg: "oklch(18% 0.03 145)",
+  error: "oklch(65% 0.16 20)",
 };
 
 function formatAddress(addr: string) {
@@ -75,21 +73,35 @@ export function DashboardView() {
     nextPayoutRecipient,
     pendingTx,
     transactions,
-    autoSimulate,
+    loading,
     contribute,
     triggerPayout,
-    setAutoSimulate,
     deleteCircle,
     leaveCircle,
   } = useCircle();
 
-  const totalPot          = contributionAmount * contributedThisCycle.length;
-  const expectedTotalPot  = contributionAmount * members.length;
+  const totalPot = contributionAmount * contributedThisCycle.length;
+  const expectedTotalPot = contributionAmount * members.length;
   const contributionsCount = contributedThisCycle.length;
-  const totalMembersCount  = members.length;
-  const progressPercent    = totalMembersCount ? (contributionsCount / totalMembersCount) * 100 : 0;
-  const isRecipient        = publicKey === nextPayoutRecipient;
+  const totalMembersCount = members.length;
+  const progressPercent = totalMembersCount ? (contributionsCount / totalMembersCount) * 100 : 0;
+  const isRecipient = publicKey === nextPayoutRecipient;
   const hasUserContributed = publicKey ? contributedThisCycle.includes(publicKey) : false;
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+          className="w-10 h-10 border-2 border-[oklch(78%_0.15_85)] border-t-transparent rounded-full"
+        />
+        <p className="text-xs uppercase tracking-widest font-semibold animate-pulse" style={{ color: "oklch(45% 0.005 85)" }}>
+          Synchronizing with Stellar Ledger...
+        </p>
+      </div>
+    );
+  }
 
   if (!members || members.length === 0) {
     return (
@@ -354,31 +366,30 @@ export function DashboardView() {
                           style={{
                             background:
                               tx.type === "contribute" ? S.successBg :
-                              tx.type === "payout"     ? S.accentBg :
-                              S.bg2,
+                                tx.type === "payout" ? S.accentBg :
+                                  S.bg2,
                             color:
                               tx.type === "contribute" ? S.success :
-                              tx.type === "payout"     ? S.accent :
-                              S.text2,
-                            border: `1px solid ${
-                              tx.type === "contribute" ? "oklch(72% 0.14 145 / 0.2)" :
-                              tx.type === "payout"     ? S.accentBorder :
-                              S.border
-                            }`,
+                                tx.type === "payout" ? S.accent :
+                                  S.text2,
+                            border: `1px solid ${tx.type === "contribute" ? "oklch(72% 0.14 145 / 0.2)" :
+                              tx.type === "payout" ? S.accentBorder :
+                                S.border
+                              }`,
                             borderRadius: "2px",
                           }}
                         >
                           {tx.type === "contribute" ? <Coins className="w-3.5 h-3.5" /> :
-                           tx.type === "payout"     ? <ArrowRightLeft className="w-3.5 h-3.5" /> :
-                           <Users className="w-3.5 h-3.5" />}
+                            tx.type === "payout" ? <ArrowRightLeft className="w-3.5 h-3.5" /> :
+                              <Users className="w-3.5 h-3.5" />}
                         </div>
                         <div>
                           <p className="text-xs font-medium" style={{ color: S.text1 }}>
                             {tx.type === "contribute"
                               ? <>Contribution from <span style={{ color: S.text2 }}>{formatAddress(tx.member || "")}</span></>
                               : tx.type === "payout"
-                              ? <>Payout → <span style={{ color: S.accent }}>{formatAddress(tx.member || "")}</span></>
-                              : "Circle created"}
+                                ? <>Payout → <span style={{ color: S.accent }}>{formatAddress(tx.member || "")}</span></>
+                                : "Circle created"}
                           </p>
                           <p className="text-[10px] mt-0.5" style={{ color: S.text3 }}>
                             Cycle #{tx.cycleId} · {new Date(tx.timestamp).toLocaleTimeString()}
@@ -430,8 +441,8 @@ export function DashboardView() {
           </div>
           <div>
             {members.map((member, index) => {
-              const isUser          = member === publicKey;
-              const hasContributed  = contributedThisCycle.includes(member);
+              const isUser = member === publicKey;
+              const hasContributed = contributedThisCycle.includes(member);
               const isNextRecipient = member === nextPayoutRecipient;
 
               return (
@@ -445,8 +456,8 @@ export function DashboardView() {
                     borderBottom: `1px solid ${S.border}`,
                     background:
                       isNextRecipient ? "oklch(78% 0.15 85 / 0.04)" :
-                      isUser          ? "oklch(17% 0.008 85 / 0.5)" :
-                      "transparent",
+                        isUser ? "oklch(17% 0.008 85 / 0.5)" :
+                          "transparent",
                   }}
                 >
                   <div className="flex items-center gap-3 min-w-0">
