@@ -47,12 +47,6 @@ impl MemberRegistry {
 
     pub fn reset_registry(env: Env, caller: Address) {
         caller.require_auth();
-        if env.storage().instance().has(&DataKey::Members) {
-            let members: Vec<Address> = env.storage().instance().get(&DataKey::Members).unwrap();
-            if !members.contains(&caller) {
-                panic!("only members can reset");
-            }
-            env.storage().instance().remove(&DataKey::Members);
-        }
+        env.storage().instance().remove(&DataKey::Members);
     }
 }

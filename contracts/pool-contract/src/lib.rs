@@ -58,6 +58,12 @@ impl PoolContract {
         env.storage()
             .instance()
             .set(&DataKey::CycleLength, &cycle_length);
+
+        // Publish creation event
+        env.events().publish(
+            (soroban_sdk::Symbol::new(&env, "circle_created"),),
+            members.clone(),
+        );
     }
 
     pub fn contribute(env: Env, member: Address, cycle_id: u64) {
@@ -86,6 +92,12 @@ impl PoolContract {
         token_client.transfer(&member, &env.current_contract_address(), &contribution_amount);
 
         env.storage().persistent().set(&key, &true);
+
+        // Publish contribution event
+        env.events().publish(
+            (soroban_sdk::Symbol::new(&env, "contribute"), member.clone()),
+            cycle_id,
+        );
     }
 
     pub fn payout(env: Env, cycle_id: u64) {
@@ -129,6 +141,12 @@ impl PoolContract {
 
         // Mark cycle paid out locally
         env.storage().persistent().set(&paid_key, &true);
+
+        // Publish payout event
+        env.events().publish(
+            (soroban_sdk::Symbol::new(&env, "payout"), local_recipient.clone()),
+            cycle_id,
+        );
     }
 
     fn get_current_cycle(env: &Env) -> u64 {
@@ -142,6 +160,10 @@ impl PoolContract {
 
     pub fn leave_circle(env: Env, caller: Address) {
         caller.require_auth();
+
+        if !env.storage().instance().has(&DataKey::Members) {
+            return;
+        }
 
         let mut members: Vec<Address> = env.storage().instance().get(&DataKey::Members).unwrap();
         let index = members.first_index_of(&caller);
@@ -167,9 +189,13 @@ impl PoolContract {
     pub fn delete_circle(env: Env, caller: Address) {
         caller.require_auth();
 
+        if !env.storage().instance().has(&DataKey::Members) {
+            return;
+        }
+
         let members: Vec<Address> = env.storage().instance().get(&DataKey::Members).unwrap();
         if members.len() == 0 {
-            panic!("no active circle");
+            return;
         }
         if caller != members.get(0).unwrap() {
             panic!("only creator can delete");

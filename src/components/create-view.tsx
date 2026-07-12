@@ -208,13 +208,14 @@ export function CreateView() {
                 return (
                   <motion.div
                     key={member}
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
+                    initial={{ opacity: 0, y: -8, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                    exit={{ opacity: 0, y: -8, height: 0 }}
                     className="flex items-center justify-between px-4 py-3"
                     style={{
                       borderBottom: "1px solid oklch(20% 0.006 85)",
                       background: isUser ? "oklch(78% 0.15 85 / 0.04)" : "transparent",
+                      overflow: "hidden",
                     }}
                   >
                     <div className="flex items-center gap-3 min-w-0">

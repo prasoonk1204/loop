@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { useCircle } from "@/lib/circle-context";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -89,6 +90,40 @@ export function DashboardView() {
   const progressPercent    = totalMembersCount ? (contributionsCount / totalMembersCount) * 100 : 0;
   const isRecipient        = publicKey === nextPayoutRecipient;
   const hasUserContributed = publicKey ? contributedThisCycle.includes(publicKey) : false;
+
+  if (!members || members.length === 0) {
+    return (
+      <div className="max-w-md mx-auto my-12 text-center space-y-6">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="p-8 space-y-6"
+          style={{
+            background: "oklch(13% 0.008 85)",
+            border: "1px solid oklch(20% 0.006 85)",
+            borderRadius: "4px",
+          }}
+        >
+          <div className="mx-auto w-12 h-12 flex items-center justify-center rounded-full" style={{ background: "oklch(78% 0.15 85 / 0.1)" }}>
+            <Users className="w-6 h-6" style={{ color: "oklch(78% 0.15 85)" }} />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-light" style={{ color: S.text1 }}>No Active Circle</h2>
+            <p className="text-xs" style={{ color: S.text3 }}>
+              You are not currently in a savings circle. Create a new circle to start contributing and saving with others.
+            </p>
+          </div>
+          <Link
+            href="/create"
+            className="btn btn-primary w-full py-3 inline-flex items-center justify-center gap-2 cursor-pointer text-xs font-semibold"
+          >
+            Create Savings Circle
+          </Link>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
