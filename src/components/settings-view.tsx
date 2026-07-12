@@ -53,6 +53,12 @@ export function SettingsView() {
   const [localToken, setLocalToken]       = useState(tokenContractId);
   const [horizonUrl, setHorizonUrl]       = useState(STELLAR_HORIZON_URL);
 
+  React.useEffect(() => {
+    setLocalPool(poolContractId);
+    setLocalRegistry(registryContractId);
+    setLocalToken(tokenContractId);
+  }, [poolContractId, registryContractId, tokenContractId]);
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     setContracts(localPool.trim(), localRegistry.trim(), localToken.trim());
@@ -79,152 +85,72 @@ export function SettingsView() {
         </div>
       </div>
 
-      {/* Execution engine */}
+      {/* Contract configs */}
       <div
         style={{ background: S.bg1, border: `1px solid ${S.border}`, borderRadius: "4px" }}
-        className="mb-6"
       >
         <div className="px-6 py-5" style={{ borderBottom: `1px solid ${S.border}` }}>
           <div className="flex items-center gap-2">
-            <Cpu className="w-3.5 h-3.5" style={{ color: S.accent }} />
-            <SectionLabel>Execution engine</SectionLabel>
+            <Network className="w-3.5 h-3.5" style={{ color: S.accent }} />
+            <SectionLabel>Network &amp; contract addresses</SectionLabel>
           </div>
         </div>
 
-        <div className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            {(["mock", "soroban"] as const).map((m) => {
-              const active = mode === m;
-              return (
-                <button
-                  key={m}
-                  onClick={() => setMode(m)}
-                  className="py-4 px-5 text-left transition-all cursor-pointer"
-                  style={{
-                    background: active ? S.accentBg : S.bg2,
-                    border: `1px solid ${active ? S.accentBorder : S.border}`,
-                    borderRadius: "2px",
-                    color: active ? S.accent : S.text3,
-                  }}
-                >
-                  <div className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: active ? S.accent : S.text3 }}>
-                    {m === "mock" ? "Mock Simulator" : "Soroban Contracts"}
-                  </div>
-                  <div className="text-[11px] font-light" style={{ color: active ? "oklch(68% 0.008 85)" : S.text3 }}>
-                    {m === "mock"
-                      ? "Runs in React state — no wallet needed"
-                      : "Queries live Stellar testnet via RPC"}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+        <form onSubmit={handleSave} className="p-6 space-y-4">
+          {[
+            {
+              label: "Horizon node endpoint",
+              value: horizonUrl,
+              setter: setHorizonUrl,
+              placeholder: "https://horizon-testnet.stellar.org",
+              disabled: true,
+              mono: false,
+            },
+            {
+              label: "Pool contract (ID)",
+              value: localPool,
+              setter: setLocalPool,
+              placeholder: "CC…",
+              mono: true,
+            },
+            {
+              label: "Member registry (ID)",
+              value: localRegistry,
+              setter: setLocalRegistry,
+              placeholder: "CC…",
+              mono: true,
+            },
+            {
+              label: "SAC token contract (ID)",
+              value: localToken,
+              setter: setLocalToken,
+              placeholder: "CD…",
+              mono: true,
+            },
+          ].map((field) => (
+            <div key={field.label} className="space-y-1.5">
+              <FieldLabel>{field.label}</FieldLabel>
+              <input
+                type="text"
+                value={field.value}
+                onChange={(e) => field.setter(e.target.value)}
+                className="input-field"
+                placeholder={field.placeholder}
+                disabled={field.disabled}
+                style={field.mono ? { fontFamily: "var(--font-mono)", fontSize: "0.8125rem" } : {}}
+              />
+            </div>
+          ))}
 
-          <p className="text-xs font-light leading-relaxed" style={{ color: S.text3 }}>
-            {mode === "mock"
-              ? "Mock simulator runs entirely in browser memory. Perfect for demos without wallet keys or testnet XLM."
-              : "Soroban Contracts mode queries real on-chain state via Horizon RPC Testnet using a Freighter wallet."}
-          </p>
-        </div>
+          <button
+            type="submit"
+            className="btn btn-primary w-full py-3 mt-2 cursor-pointer flex items-center justify-center gap-2"
+          >
+            <Save className="w-4 h-4" />
+            Save configurations
+          </button>
+        </form>
       </div>
-
-      {/* Contract config or mock info */}
-      <AnimatePresence mode="wait">
-        {mode === "soroban" ? (
-          <motion.div
-            key="soroban-form"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            style={{ background: S.bg1, border: `1px solid ${S.border}`, borderRadius: "4px", overflow: "hidden" }}
-          >
-            <div className="px-6 py-5" style={{ borderBottom: `1px solid ${S.border}` }}>
-              <div className="flex items-center gap-2">
-                <Network className="w-3.5 h-3.5" style={{ color: S.accent }} />
-                <SectionLabel>Network &amp; contract addresses</SectionLabel>
-              </div>
-            </div>
-
-            <form onSubmit={handleSave} className="p-6 space-y-4">
-              {[
-                {
-                  label: "Horizon node endpoint",
-                  value: horizonUrl,
-                  setter: setHorizonUrl,
-                  placeholder: "https://horizon-testnet.stellar.org",
-                  mono: false,
-                },
-                {
-                  label: "Pool contract (ID)",
-                  value: localPool,
-                  setter: setLocalPool,
-                  placeholder: "CC…",
-                  mono: true,
-                },
-                {
-                  label: "Member registry (ID)",
-                  value: localRegistry,
-                  setter: setLocalRegistry,
-                  placeholder: "CC…",
-                  mono: true,
-                },
-                {
-                  label: "SAC token contract (ID)",
-                  value: localToken,
-                  setter: setLocalToken,
-                  placeholder: "CD…",
-                  mono: true,
-                },
-              ].map((field) => (
-                <div key={field.label} className="space-y-1.5">
-                  <FieldLabel>{field.label}</FieldLabel>
-                  <input
-                    type="text"
-                    value={field.value}
-                    onChange={(e) => field.setter(e.target.value)}
-                    className="input-field"
-                    placeholder={field.placeholder}
-                    style={field.mono ? { fontFamily: "var(--font-mono)", fontSize: "0.8125rem" } : {}}
-                  />
-                </div>
-              ))}
-
-              <button
-                type="submit"
-                className="btn btn-primary w-full py-3 mt-2 cursor-pointer"
-              >
-                <Save className="w-4 h-4" />
-                Save configurations
-              </button>
-            </form>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="mock-info"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            style={{
-              background: S.successBg,
-              border: `1px solid oklch(72% 0.14 145 / 0.2)`,
-              borderRadius: "4px",
-              overflow: "hidden",
-            }}
-          >
-            <div className="flex gap-3 p-5">
-              <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" style={{ color: S.success }} />
-              <div>
-                <p className="text-xs font-semibold mb-1" style={{ color: S.success }}>
-                  Mock simulator active
-                </p>
-                <p className="text-xs font-light leading-relaxed" style={{ color: "oklch(60% 0.007 85)" }}>
-                  No blockchain configuration required. Balance changes, cycle events, and payouts are fully simulated in memory. Enable auto-simulate on the dashboard to generate live background activity.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }

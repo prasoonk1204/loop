@@ -15,13 +15,20 @@ import {
 
 export function CreateView() {
   const router = useRouter();
-  const { createCircle, publicKey, mode, addToast } = useCircle();
+  const { createCircle, publicKey, mode, members: activeMembers, addToast } = useCircle();
   const [amount, setAmount] = useState("100");
   const [length, setLength] = useState("10");
   const [newMember, setNewMember] = useState("");
   
   // Default member list (pre-filled for ease of use)
   const [members, setMembers] = useState<string[]>([]);
+
+  // Redirect to dashboard if a circle is already active on-chain
+  React.useEffect(() => {
+    if (activeMembers && activeMembers.length > 0) {
+      router.push("/dashboard");
+    }
+  }, [activeMembers, router]);
 
   // Sync members list when mode or connected wallet changes
   React.useEffect(() => {

@@ -78,6 +78,8 @@ export function DashboardView() {
     contribute,
     triggerPayout,
     setAutoSimulate,
+    deleteCircle,
+    leaveCircle,
   } = useCircle();
 
   const totalPot          = contributionAmount * contributedThisCycle.length;
@@ -250,36 +252,31 @@ export function DashboardView() {
                   </span>
                 </p>
               )}
-            </div>
 
-            {/* Auto-simulate toggle */}
-            <div
-              className="flex items-center justify-between px-6 py-4"
-              style={{ borderTop: `1px solid ${S.border}` }}
-            >
-              <div>
-                <p className="text-sm font-medium" style={{ color: S.text1 }}>
-                  Simulate circle activity
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: S.text3 }}>
-                  Mock members make automatic contributions.{" "}
-                  <span style={{ color: S.accent }}>Mock mode only.</span>
-                </p>
-              </div>
-              <button
-                onClick={() => setAutoSimulate(!autoSimulate)}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs uppercase tracking-widest font-semibold transition-all cursor-pointer"
-                style={{
-                  background: autoSimulate ? S.accentBg : "transparent",
-                  border: `1px solid ${autoSimulate ? S.accentBorder : S.border}`,
-                  color: autoSimulate ? S.accent : S.text3,
-                  borderRadius: "2px",
-                }}
-                title={autoSimulate ? "Pause" : "Run"}
-              >
-                {autoSimulate ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                {autoSimulate ? "Pause" : "Run"}
-              </button>
+              {publicKey && members.includes(publicKey) && (
+                <>
+                  <div style={{ borderTop: `1px solid ${S.border}`, margin: "1rem 0" }} />
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    {publicKey !== members[0] ? (
+                      <button
+                        onClick={leaveCircle}
+                        disabled={pendingTx}
+                        className="btn btn-secondary flex-1 py-2.5 text-xs font-semibold cursor-pointer border-red-500/20 text-red-400 hover:bg-red-500/5 hover:border-red-500/40"
+                      >
+                        Leave Circle
+                      </button>
+                    ) : (
+                      <button
+                        onClick={deleteCircle}
+                        disabled={pendingTx}
+                        className="btn btn-secondary flex-1 py-2.5 text-xs font-semibold cursor-pointer border-red-500/20 text-red-400 hover:bg-red-500/5 hover:border-red-500/40"
+                      >
+                        Delete Circle
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </Card>
         </motion.div>

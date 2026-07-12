@@ -169,10 +169,4 @@ describe("DashboardView – rendering", () => {
     expect(screen.getAllByText(/contribute/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/payout/i).length).toBeGreaterThan(0);
   });
-
-  it("renders the Run auto-simulate button when not simulating", () => {
-    render(<DashboardView />);
-    // Button text is "Run" when autoSimulate is false
-    expect(screen.getByRole("button", { name: /^run$/i })).toBeInTheDocument();
-  });
 });

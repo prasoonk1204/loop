@@ -10,8 +10,9 @@ pub enum DataKey {
     Members,            // Vec<Address>
     ContributionAmount, // i128
     CycleLength,        // u64
-    Contributed(u64, Address), // bool
-    CyclePaid(u64),     // bool
+    CircleId,           // u32
+    Contributed(u32, u64, Address), // circle_id, cycle_id, member -> bool
+    CyclePaid(u32, u64),     // circle_id, cycle_id -> bool
 }
 
 #[contract]
@@ -25,6 +26,10 @@ impl PoolContract {
         }
         env.storage().instance().set(&DataKey::Token, &token);
         env.storage().instance().set(&DataKey::Registry, &registry);
+    }
+
+    fn get_circle_id(env: &Env) -> u32 {
+        env.storage().instance().get(&DataKey::CircleId).unwrap_or(0)
     }
 
     pub fn create_circle(
@@ -65,11 +70,13 @@ impl PoolContract {
 
         let contribution_amount: i128 = env.storage().instance().get(&DataKey::ContributionAmount).unwrap();
 
-        if env.storage().persistent().has(&DataKey::CyclePaid(cycle_id)) {
+        let circle_id = Self::get_circle_id(&env);
+        let paid_key = DataKey::CyclePaid(circle_id, cycle_id);
+        if env.storage().persistent().has(&paid_key) {
             panic!("cycle already paid out");
         }
 
-        let key = DataKey::Contributed(cycle_id, member.clone());
+        let key = DataKey::Contributed(circle_id, cycle_id, member.clone());
         if env.storage().persistent().has(&key) {
             panic!("member already contributed for this cycle");
         }
@@ -82,7 +89,8 @@ impl PoolContract {
     }
 
     pub fn payout(env: Env, cycle_id: u64) {
-        let paid_key = DataKey::CyclePaid(cycle_id);
+        let circle_id = Self::get_circle_id(&env);
+        let paid_key = DataKey::CyclePaid(circle_id, cycle_id);
         if env.storage().persistent().has(&paid_key) {
             panic!("cycle already paid out");
         }
@@ -90,7 +98,7 @@ impl PoolContract {
         let members: Vec<Address> = env.storage().instance().get(&DataKey::Members).unwrap();
 
         for member in members.iter() {
-            let key = DataKey::Contributed(cycle_id, member.clone());
+            let key = DataKey::Contributed(circle_id, cycle_id, member.clone());
             if !env.storage().persistent().has(&key) {
                 panic!("not all members contributed");
             }
@@ -121,6 +129,73 @@ impl PoolContract {
 
         // Mark cycle paid out locally
         env.storage().persistent().set(&paid_key, &true);
+    }
+
+    fn get_current_cycle(env: &Env) -> u64 {
+        let circle_id = Self::get_circle_id(env);
+        let mut cycle_id = 0;
+        while env.storage().persistent().has(&DataKey::CyclePaid(circle_id, cycle_id)) {
+            cycle_id += 1;
+        }
+        cycle_id
+    }
+
+    pub fn leave_circle(env: Env, caller: Address) {
+        caller.require_auth();
+
+        let mut members: Vec<Address> = env.storage().instance().get(&DataKey::Members).unwrap();
+        let index = members.first_index_of(&caller);
+        if index.is_none() {
+            panic!("not a member");
+        }
+
+        let circle_id = Self::get_circle_id(&env);
+        let cycle_id = Self::get_current_cycle(&env);
+        let key = DataKey::Contributed(circle_id, cycle_id, caller.clone());
+        if env.storage().persistent().has(&key) {
+            let contribution_amount: i128 = env.storage().instance().get(&DataKey::ContributionAmount).unwrap();
+            let token_address: Address = env.storage().instance().get(&DataKey::Token).unwrap();
+            let token_client = token::Client::new(&env, &token_address);
+            token_client.transfer(&env.current_contract_address(), &caller, &contribution_amount);
+            env.storage().persistent().remove(&key);
+        }
+
+        members.remove(index.unwrap());
+        env.storage().instance().set(&DataKey::Members, &members);
+    }
+
+    pub fn delete_circle(env: Env, caller: Address) {
+        caller.require_auth();
+
+        let members: Vec<Address> = env.storage().instance().get(&DataKey::Members).unwrap();
+        if members.len() == 0 {
+            panic!("no active circle");
+        }
+        if caller != members.get(0).unwrap() {
+            panic!("only creator can delete");
+        }
+
+        let contribution_amount: i128 = env.storage().instance().get(&DataKey::ContributionAmount).unwrap();
+        let token_address: Address = env.storage().instance().get(&DataKey::Token).unwrap();
+        let token_client = token::Client::new(&env, &token_address);
+        let circle_id = Self::get_circle_id(&env);
+        let cycle_id = Self::get_current_cycle(&env);
+
+        // Refund all contributors in the current cycle
+        for member in members.iter() {
+            let key = DataKey::Contributed(circle_id, cycle_id, member.clone());
+            if env.storage().persistent().has(&key) {
+                token_client.transfer(&env.current_contract_address(), &member, &contribution_amount);
+                env.storage().persistent().remove(&key);
+            }
+        }
+
+        env.storage().instance().remove(&DataKey::Members);
+        env.storage().instance().remove(&DataKey::ContributionAmount);
+        env.storage().instance().remove(&DataKey::CycleLength);
+        
+        let next_id = Self::get_circle_id(&env) + 1;
+        env.storage().instance().set(&DataKey::CircleId, &next_id);
     }
 
     pub fn get_token(env: Env) -> Address {
@@ -156,12 +231,14 @@ impl PoolContract {
     }
 
     pub fn is_contributed(env: Env, cycle_id: u64, member: Address) -> bool {
-        let key = DataKey::Contributed(cycle_id, member);
+        let circle_id = Self::get_circle_id(&env);
+        let key = DataKey::Contributed(circle_id, cycle_id, member);
         env.storage().persistent().has(&key)
     }
 
     pub fn is_cycle_paid(env: Env, cycle_id: u64) -> bool {
-        let paid_key = DataKey::CyclePaid(cycle_id);
+        let circle_id = Self::get_circle_id(&env);
+        let paid_key = DataKey::CyclePaid(circle_id, cycle_id);
         env.storage().persistent().has(&paid_key)
     }
 }

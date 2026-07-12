@@ -33,4 +33,26 @@ impl MemberRegistry {
         let key = DataKey::Paid(cycle_id, member);
         env.storage().persistent().set(&key, &true);
     }
+
+    pub fn remove_member(env: Env, caller: Address) {
+        caller.require_auth();
+        let mut members: Vec<Address> = env.storage().instance().get(&DataKey::Members).unwrap();
+        let index = members.first_index_of(&caller);
+        if index.is_none() {
+            panic!("not a member");
+        }
+        members.remove(index.unwrap());
+        env.storage().instance().set(&DataKey::Members, &members);
+    }
+
+    pub fn reset_registry(env: Env, caller: Address) {
+        caller.require_auth();
+        if env.storage().instance().has(&DataKey::Members) {
+            let members: Vec<Address> = env.storage().instance().get(&DataKey::Members).unwrap();
+            if !members.contains(&caller) {
+                panic!("only members can reset");
+            }
+            env.storage().instance().remove(&DataKey::Members);
+        }
+    }
 }
