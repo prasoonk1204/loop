@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { useCircle } from "@/lib/circle-context";
 import { initWalletKit, getSupportedWallets, getConnectedWalletName } from "@/lib/walletkit";
 import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk";
@@ -8,11 +9,10 @@ import { horizonServer, nativeBalance, formatXlmBalance } from "@/lib/stellar";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  PlusCircle, 
-  Settings as SettingsIcon, 
-  Wallet, 
+import {
+  LayoutDashboard,
+  PlusCircle,
+  Wallet,
   LogOut,
   AlertCircle,
   CheckCircle,
@@ -79,8 +79,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/create",    label: "New Circle", icon: PlusCircle },
-    { href: "/settings",  label: "Settings",   icon: SettingsIcon },
+    { href: "/create", label: "New Circle", icon: PlusCircle },
   ];
 
   return (
@@ -97,11 +96,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               className="pointer-events-auto"
               style={{
                 background: "oklch(14% 0.008 85)",
-                border: `1px solid ${
-                  toast.type === "success" ? "oklch(72% 0.14 145 / 0.4)" :
-                  toast.type === "error"   ? "oklch(65% 0.16 20 / 0.4)" :
-                  "oklch(78% 0.15 85 / 0.3)"
-                }`,
+                border: `1px solid ${toast.type === "success" ? "oklch(72% 0.14 145 / 0.4)" :
+                  toast.type === "error" ? "oklch(65% 0.16 20 / 0.4)" :
+                    "oklch(78% 0.15 85 / 0.3)"
+                  }`,
                 borderRadius: "2px",
                 padding: "12px 14px",
                 display: "flex",
@@ -109,13 +107,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 alignItems: "flex-start",
                 color:
                   toast.type === "success" ? "oklch(78% 0.12 145)" :
-                  toast.type === "error"   ? "oklch(70% 0.14 20)" :
-                  "oklch(78% 0.15 85)",
+                    toast.type === "error" ? "oklch(70% 0.14 20)" :
+                      "oklch(78% 0.15 85)",
               }}
             >
               {toast.type === "success" && <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />}
-              {toast.type === "error"   && <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />}
-              {toast.type === "info"    && <Info        className="w-4 h-4 shrink-0 mt-0.5" />}
+              {toast.type === "error" && <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />}
+              {toast.type === "info" && <Info className="w-4 h-4 shrink-0 mt-0.5" />}
               <span className="text-sm font-light leading-snug">{toast.message}</span>
             </motion.div>
           ))}
@@ -134,12 +132,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="max-w-6xl mx-auto px-6 md:px-8 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0 hover:opacity-80 transition-opacity">
-            <div
-              className="w-7 h-7 flex items-center justify-center text-xs font-semibold shrink-0"
-              style={{ background: S.accent, color: S.accentDark, borderRadius: "2px" }}
-            >
-              L
-            </div>
+            <Image src="/logo.png" alt="Loop" width={28} height={28} className="shrink-0" style={{ borderRadius: "2px" }} />
             <span className="font-medium text-sm tracking-wide" style={{ color: S.text1 }}>Loop</span>
           </Link>
 

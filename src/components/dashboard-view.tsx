@@ -88,6 +88,34 @@ export function DashboardView() {
   const isRecipient = publicKey === nextPayoutRecipient;
   const hasUserContributed = publicKey ? contributedThisCycle.includes(publicKey) : false;
 
+  if (!publicKey) {
+    return (
+      <div className="max-w-md mx-auto my-12 text-center space-y-6">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="p-8 space-y-6"
+          style={{
+            background: "oklch(13% 0.008 85)",
+            border: "1px solid oklch(20% 0.006 85)",
+            borderRadius: "4px",
+          }}
+        >
+          <div className="mx-auto w-12 h-12 flex items-center justify-center rounded-full" style={{ background: "oklch(78% 0.15 85 / 0.1)" }}>
+            <ArrowUpRight className="w-6 h-6" style={{ color: "oklch(78% 0.15 85)" }} />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-light" style={{ color: S.text1 }}>Wallet Not Connected</h2>
+            <p className="text-xs" style={{ color: S.text3 }}>
+              Connect your Stellar wallet to view your savings circle and make contributions.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">

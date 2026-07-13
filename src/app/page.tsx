@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 
@@ -55,16 +56,11 @@ export default function LandingPage() {
           background: "oklch(10% 0.008 85 / 0.9)",
           backdropFilter: "blur(12px)",
         }}
-        className="sticky top-0 z-50"
+        className="fixed w-full top-0 z-50"
       >
         <div className="max-w-6xl mx-auto px-6 md:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div
-              className="w-7 h-7 flex items-center justify-center text-xs font-semibold"
-              style={{ background: "oklch(78% 0.15 85)", color: "oklch(10% 0.008 85)", borderRadius: "2px" }}
-            >
-              L
-            </div>
+            <Image src="/logo.png" alt="Loop" width={28} height={28} className="shrink-0" style={{ borderRadius: "2px" }} />
             <span className="font-medium text-sm tracking-wide" style={{ color: "oklch(97% 0.005 85)" }}>
               Loop
             </span>
@@ -256,9 +252,9 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-px" style={{ background: "oklch(20% 0.006 85)" }}>
             {[
-              { n: "01", title: "Form a circle", body: "Define members, contribution amount (XLM), and cycle length in ledgers. Deploy the Soroban contract." },
-              { n: "02", title: "Everyone deposits", body: "Every member calls contribute(). The contract holds funds until all deposits are received." },
-              { n: "03", title: "Payout rotates", body: "Once the cycle closes, the full pool is released to the designated recipient. Next cycle begins." },
+              { n: "01", title: "Form a circle", body: "Connect your Freighter wallet, add member addresses, set a contribution amount (XLM) and cycle length. Submit to register members and initialise the on-chain pool." },
+              { n: "02", title: "Everyone contributes", body: "Each member visits the dashboard and calls contribute(). The Soroban contract holds the funds until every member has paid in." },
+              { n: "03", title: "Payout rotates", body: "Once all contributions are in, anyone can trigger the payout. The full pot is sent to that cycle's recipient and the next cycle begins automatically." },
             ].map((step) => (
               <div key={step.n} className="p-8 space-y-4" style={{ background: "oklch(11.5% 0.008 85)" }}>
                 <div className="text-xs font-semibold tracking-widest uppercase" style={{ color: "oklch(78% 0.15 85)" }}>
@@ -281,11 +277,11 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px" style={{ background: "oklch(20% 0.006 85)" }}>
             {[
               { icon: "◈", title: "Soroban smart contracts", body: "All escrow logic lives on-chain. No admin keys, no multisig, no custodian risk." },
-              { icon: "◐", title: "Mock simulator", body: "Test the full cycle flow instantly in your browser — no wallet, no testnet XLM required." },
-              { icon: "◆", title: "Stellar native", body: "Sub-cent fees, 5-second finality, native XLM contributions. Integrates with Freighter." },
-              { icon: "◉", title: "Live activity log", body: "Watch contributions and payouts stream in real-time across the dashboard." },
-              { icon: "◪", title: "Open participation", body: "Any Stellar public key can join a circle. No KYC, no platform account required." },
+              { icon: "◆", title: "Stellar native", body: "Sub-cent fees, 5-second finality, native XLM contributions on the Stellar testnet." },
+              { icon: "◉", title: "Live activity log", body: "Contributions and payouts surface in real-time on the dashboard, each linked to its on-chain transaction." },
+              { icon: "◐", title: "Multi-wallet support", body: "Connect with Freighter, Lobstr, xBull or any wallet supported by Stellar Wallets Kit — no lock-in." },
               { icon: "◧", title: "Deterministic order", body: "Payout order is locked at circle creation. No randomness, no disputes." },
+              { icon: "◪", title: "Creator-defined membership", body: "The circle creator sets the member list and contribution amount. Every participant is known before any funds move." },
             ].map((f) => (
               <div key={f.title} className="p-8 space-y-3" style={{ background: "oklch(10% 0.008 85)" }}>
                 <div className="text-xl" style={{ color: "oklch(78% 0.15 85)" }}>{f.icon}</div>
@@ -306,7 +302,7 @@ export default function LandingPage() {
                 Start your first circle today.
               </h2>
               <p className="text-sm font-light" style={{ color: "oklch(55% 0.007 85)" }}>
-                Try the simulator — no wallet needed.
+                Connect your wallet and start saving with your circle on Stellar testnet.
               </p>
             </div>
             <div className="md:col-span-4 flex flex-wrap gap-3 md:justify-end">
@@ -323,12 +319,7 @@ export default function LandingPage() {
       <footer style={{ borderTop: "1px solid oklch(20% 0.006 85)" }}>
         <div className="max-w-6xl mx-auto px-6 md:px-8 py-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
-            <div
-              className="w-6 h-6 flex items-center justify-center text-[11px] font-semibold"
-              style={{ background: "oklch(78% 0.15 85)", color: "oklch(10% 0.008 85)", borderRadius: "2px" }}
-            >
-              L
-            </div>
+            <Image src="/logo.png" alt="Loop" width={24} height={24} style={{ borderRadius: "2px" }} />
             <span className="text-xs font-medium" style={{ color: "oklch(45% 0.005 85)" }}>
               Loop Savings Circle — Stellar Soroban
             </span>
@@ -344,9 +335,6 @@ export default function LandingPage() {
               Stellar Explorer
               <ArrowUpRight className="w-3 h-3" />
             </a>
-            <Link href="/settings" className="text-xs" style={{ color: "oklch(45% 0.005 85)" }}>
-              Config
-            </Link>
           </div>
         </div>
       </footer>

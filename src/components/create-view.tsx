@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCircle } from "@/lib/circle-context";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,7 +11,8 @@ import {
   Coins,
   Clock,
   ArrowRight,
-  HelpCircle
+  HelpCircle,
+  Users,
 } from "lucide-react";
 
 export function CreateView() {
@@ -23,12 +25,7 @@ export function CreateView() {
   // Default member list (pre-filled for ease of use)
   const [members, setMembers] = useState<string[]>([]);
 
-  // Redirect to dashboard if a circle is already active on-chain
-  React.useEffect(() => {
-    if (activeMembers && activeMembers.length > 0) {
-      router.push("/dashboard");
-    }
-  }, [activeMembers, router]);
+  const isCircleActive = !!publicKey && activeMembers && activeMembers.length > 0;
 
   // Sync members list when mode or connected wallet changes
   React.useEffect(() => {
@@ -74,6 +71,10 @@ export function CreateView() {
   };
 
   const handleCreate = async () => {
+    if (isCircleActive) {
+      addToast("Leave your current circle before creating a new one", "error");
+      return;
+    }
     if (members.length < 2) {
       addToast("Savings circle must have at least 2 members", "error");
       return;
@@ -96,6 +97,37 @@ export function CreateView() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      {/* Already-in-circle notice */}
+      {isCircleActive && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="md:col-span-2 flex items-start md:flex-row flex-col gap-3 px-5 py-4"
+          style={{
+            background: "oklch(78% 0.15 85 / 0.07)",
+            border: "1px solid oklch(78% 0.15 85 / 0.3)",
+            borderRadius: "4px",
+          }}
+        >
+          <Users className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "oklch(78% 0.15 85)" }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium" style={{ color: "oklch(78% 0.15 85)" }}>
+              You are already in an active circle
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: "oklch(65% 0.008 85)" }}>
+              Only one circle can be active at a time. Leave or delete your current circle from the dashboard before creating a new one.
+            </p>
+          </div>
+          <Link
+            href="/dashboard"
+            className="btn btn-primary py-2 px-4 text-xs shrink-0"
+          >
+            Go to Dashboard
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </motion.div>
+      )}
       {/* Parameters panel */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -162,7 +194,8 @@ export function CreateView() {
         <div className="px-6 pb-6">
           <button
             onClick={handleCreate}
-            className="btn btn-primary w-full py-3 cursor-pointer"
+            disabled={!!isCircleActive}
+            className="btn btn-primary w-full py-3 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Create Circle
             <ArrowRight className="w-4 h-4" />
