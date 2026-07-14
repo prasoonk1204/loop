@@ -85,7 +85,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
     }, 4000);
   }, []);
 
-  const fetchOnChainTransactions = useCallback(async () => {
+  const fetchOnChainTransactions = useCallback(async (currentContributionAmount?: number, currentMembersLength?: number) => {
     try {
       const poolId = process.env.NEXT_PUBLIC_SOROBAN_POOL_CONTRACT_ID || "";
       if (!poolId || poolId.startsWith("CC...")) return;
@@ -106,6 +106,8 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       });
 
       const txs: Transaction[] = [];
+      const contributionAmt = currentContributionAmount !== undefined ? currentContributionAmount : state.contributionAmount;
+      const membersLen = currentMembersLength !== undefined ? currentMembersLength : state.members.length;
 
       for (const event of eventsRes.events) {
         try {
@@ -129,7 +131,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
               id: event.id || Math.random().toString(),
               type: "contribute",
               member,
-              amount: state.contributionAmount,
+              amount: contributionAmt,
               cycleId,
               status: "success",
               timestamp: Date.now(),
@@ -142,7 +144,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
               id: event.id || Math.random().toString(),
               type: "payout",
               member,
-              amount: state.contributionAmount * state.members.length,
+              amount: contributionAmt * membersLen,
               cycleId,
               status: "success",
               timestamp: Date.now(),
@@ -156,10 +158,29 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
 
       txs.reverse();
 
-      setState((prev) => ({
-        ...prev,
-        transactions: txs,
-      }));
+      setState((prev) => {
+        const existingTxMap = new Map<string, Transaction>();
+        for (const tx of prev.transactions) {
+          if (tx.hash) {
+            existingTxMap.set(tx.hash, tx);
+          }
+        }
+
+        const updatedTxs = txs.map(tx => {
+          if (tx.hash) {
+            const existing = existingTxMap.get(tx.hash);
+            if (existing && existing.amount !== undefined && existing.amount !== 0) {
+              return { ...tx, amount: existing.amount };
+            }
+          }
+          return tx;
+        });
+
+        return {
+          ...prev,
+          transactions: updatedTxs,
+        };
+      });
     } catch (e) {
       console.error("Error fetching on-chain transactions:", e);
     }
@@ -206,6 +227,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
           contributedThisCycle: [],
           nextPayoutRecipient: "",
         }));
+        void fetchOnChainTransactions(0, 0);
         return;
       }
 
@@ -247,7 +269,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
         contributedThisCycle,
         nextPayoutRecipient,
       }));
-      void fetchOnChainTransactions();
+      void fetchOnChainTransactions(contributionAmount, rawMembers.length);
     } catch (e) {
       console.error("Error fetching Soroban circle state:", e);
     } finally {

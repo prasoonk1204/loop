@@ -1,5 +1,5 @@
 /**
- * Frontend tests: DashboardView rendering
+ * Frontend tests: ActivityView rendering
  */
 
 import React from "react";
@@ -72,9 +72,9 @@ vi.mock("@/lib/circle-context", () => ({
 }));
 
 // ── Component import ──────────────────────────────────────────────────────────
-import { DashboardView } from "@/components/dashboard-view";
+import { ActivityView } from "@/components/activity-view";
 
-// Convenient base state for use in tests (mirrors what vi.hoisted set up)
+// Convenient base state for use in tests
 const baseState = {
   publicKey: "GTEST1234567890ABCDEF",
   balance: "1000",
@@ -93,7 +93,7 @@ const baseState = {
 };
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
-describe("DashboardView – rendering", () => {
+describe("ActivityView – rendering", () => {
   beforeEach(() => {
     mockContribute.mockClear();
     mockTriggerPayout.mockClear();
@@ -102,29 +102,45 @@ describe("DashboardView – rendering", () => {
     mockUseCircle.mockReturnValue(baseState);
   });
 
-  it("renders the members label somewhere on the page", () => {
-    render(<DashboardView />);
-    expect(screen.getAllByText(/members/i).length).toBeGreaterThan(0);
+  it("renders the activity / transaction section heading", () => {
+    render(<ActivityView />);
+    expect(screen.getAllByText(/activity/i).length).toBeGreaterThan(0);
   });
 
-  it("shows the correct number of members (3)", () => {
-    render(<DashboardView />);
-    expect(screen.getByText("3")).toBeInTheDocument();
+  it("shows an empty-state indicator when there are no transactions", () => {
+    render(<ActivityView />);
+    expect(screen.getByText(/no transactions yet/i)).toBeInTheDocument();
   });
 
-  it("displays the current cycle number", () => {
-    render(<DashboardView />);
-    expect(screen.getByText("2")).toBeInTheDocument();
-  });
+  it("renders transaction type labels when transactions exist", () => {
+    mockUseCircle.mockReturnValue({
+      ...baseState,
+      transactions: [
+        {
+          id: "tx1",
+          type: "contribute",
+          member: "GABC...1",
+          amount: 100,
+          cycleId: 2,
+          status: "success",
+          timestamp: Date.now(),
+          hash: "tx_abc123",
+        },
+        {
+          id: "tx2",
+          type: "payout",
+          member: "GDEF...2",
+          amount: 300,
+          cycleId: 1,
+          status: "success",
+          timestamp: Date.now() - 5000,
+          hash: "tx_def456",
+        },
+      ],
+    });
 
-  it("shows the contribution amount", () => {
-    render(<DashboardView />);
-    expect(screen.getAllByText(/100/).length).toBeGreaterThan(0);
-  });
-
-  it("renders a payout trigger button", () => {
-    render(<DashboardView />);
-    const payoutBtn = screen.getByRole("button", { name: /payout/i });
-    expect(payoutBtn).toBeInTheDocument();
+    render(<ActivityView />);
+    expect(screen.getAllByText(/contribution/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/payout/i).length).toBeGreaterThan(0);
   });
 });

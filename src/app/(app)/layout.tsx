@@ -16,12 +16,14 @@ import {
   LogOut,
   AlertCircle,
   CheckCircle,
-  Info
+  Info,
+  Clock
 } from "lucide-react";
 
 const S = {
   bg0: "oklch(10% 0.008 85)",
   bg1: "oklch(13% 0.008 85)",
+  bg2: "oklch(17% 0.008 85)",
   border: "oklch(20% 0.006 85)",
   borderStrong: "oklch(28% 0.007 85)",
   text1: "oklch(97% 0.005 85)",
@@ -80,6 +82,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/create", label: "New Circle", icon: PlusCircle },
+    { href: "/activity", label: "Activity", icon: Clock },
   ];
 
   return (

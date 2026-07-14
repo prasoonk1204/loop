@@ -2,7 +2,6 @@
 
 Loop is a trustless ROSCA (Rotating Savings and Credit Association) platform built on Stellar Soroban. Members pool XLM each cycle; the full pot rotates to one recipient per cycle until everyone has received. No middlemen, no custodians — all escrow logic lives on-chain.
 
----
 
 ## Quick Nav
 
@@ -22,8 +21,8 @@ Loop is a trustless ROSCA (Rotating Savings and Credit Association) platform bui
 
 | Resource | Link |
 |---|---|
-| Live App | <!-- TODO: add deployed site URL --> |
-| Demo Video | <!-- TODO: add demo video URL --> |
+| Live dApp | [loop-stellar.vercel.app](https://loop-stellar.vercel.app) |
+| Demo Video | [Watch on youtube](https://youtu.be/P-EAgVsGwMY) |
 | Pool Contract | [`CCDEDVFTT6C6YEJC472HVJJLP3U25CX5GJCL7VTDOV753IMUJ5EKXVTV`](https://stellar.expert/explorer/testnet/contract/CCDEDVFTT6C6YEJC472HVJJLP3U25CX5GJCL7VTDOV753IMUJ5EKXVTV) |
 | Member Registry | [`CA4VMD62IU7ZP4C537HY7MKURC7TAFCT3QBXENGZGVB5WQZMQU7EUO26`](https://stellar.expert/explorer/testnet/contract/CA4VMD62IU7ZP4C537HY7MKURC7TAFCT3QBXENGZGVB5WQZMQU7EUO26) |
 | SAC Token | [`CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC) |
