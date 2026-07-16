@@ -70,6 +70,8 @@ export function DashboardView() {
     currentCycle,
     contributedThisCycle,
     nextPayoutRecipient,
+    creditScore,
+    completedCycles,
     pendingTx,
     loading,
     contribute,
@@ -170,6 +172,21 @@ export function DashboardView() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
       {/* ── Left col ───────────────────────────────────────────── */}
       <div className="lg:col-span-2 space-y-6">
+
+        <Card>
+          <div className="p-5 flex items-center justify-between">
+            <div>
+              <Label>On-chain credit score</Label>
+              <p className="text-xs mt-1" style={{ color: S.text2 }}>Based on completed contribution cycles</p>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-light" style={{ color: S.accent }}>{creditScore}/100</div>
+              <p className="text-[10px] uppercase tracking-widest" style={{ color: S.text3 }}>
+                {completedCycles} completed {completedCycles === 1 ? "cycle" : "cycles"}
+              </p>
+            </div>
+          </div>
+        </Card>
 
         {/* Cycle status */}
         <motion.div

@@ -135,7 +135,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="max-w-6xl mx-auto px-6 md:px-8 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0 hover:opacity-80 transition-opacity">
-            <Image src="/logo.png" alt="Loop" width={28} height={28} className="shrink-0" style={{ borderRadius: "2px" }} />
+            <Image src="/logo.png" alt="Loop" width={28} height={28} className="shrink-0" style={{ width: "auto", height: "auto", borderRadius: "2px" }} />
             <span className="font-medium text-sm tracking-wide" style={{ color: S.text1 }}>Loop</span>
           </Link>
 

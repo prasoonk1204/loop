@@ -30,6 +30,8 @@ export type CircleState = {
   currentCycle: number;
   contributedThisCycle: string[];
   nextPayoutRecipient: string;
+  creditScore: number;
+  completedCycles: number;
   loading: boolean;
   pendingTx: boolean;
   transactions: Transaction[];
@@ -69,6 +71,8 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
     currentCycle: 0,
     contributedThisCycle: [],
     nextPayoutRecipient: "",
+    creditScore: 0,
+    completedCycles: 0,
     loading: true,
     pendingTx: false,
     transactions: [],
@@ -197,13 +201,13 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       const sourceAddr = state.publicKey || "GCQKBI3RFBB7N73FLCG2IHSX57LF5RN7J4OBONRDBKCHP7P2YG45OZ43";
       const sourceAccount = new Account(sourceAddr, "0");
 
-      const simulateCall = async (method: string, args: (xdr.ScVal)[] = []) => {
+      const simulateCall = async (targetContractId: string, method: string, args: (xdr.ScVal)[] = []) => {
         const tx = new TransactionBuilder(sourceAccount, {
           fee: "100",
           networkPassphrase: STELLAR_NETWORK_PASSPHRASE,
         })
           .addOperation(Operation.invokeContractFunction({
-            contract: contractId,
+            contract: targetContractId,
             function: method,
             args: args,
           }))
@@ -216,7 +220,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
         return null;
       };
 
-      const rawMembers = await simulateCall("get_members") as string[] | null;
+      const rawMembers = await simulateCall(contractId, "get_members") as string[] | null;
       if (!rawMembers || rawMembers.length === 0) {
         setState((prev) => ({
           ...prev,
@@ -231,15 +235,15 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const contributionVal = await simulateCall("get_contribution_amount");
+      const contributionVal = await simulateCall(contractId, "get_contribution_amount");
       const contributionAmount = contributionVal !== null ? Number(BigInt(contributionVal) / BigInt(10000000)) : 0;
 
-      const lengthVal = await simulateCall("get_cycle_length");
+      const lengthVal = await simulateCall(contractId, "get_cycle_length");
       const cycleLength = lengthVal !== null ? Number(lengthVal) : 0;
 
       let currentCycle = 0;
       while (true) {
-        const paid = await simulateCall("is_cycle_paid", [nativeToScVal(BigInt(currentCycle), { type: "u64" })]);
+        const paid = await simulateCall(contractId, "is_cycle_paid", [nativeToScVal(BigInt(currentCycle), { type: "u64" })]);
         if (paid === true) {
           currentCycle++;
         } else {
@@ -249,7 +253,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
 
       const contributedThisCycle: string[] = [];
       for (const m of rawMembers) {
-        const contributed = await simulateCall("is_contributed", [
+        const contributed = await simulateCall(contractId, "is_contributed", [
           nativeToScVal(BigInt(currentCycle), { type: "u64" }),
           nativeToScVal(m, { type: "address" }),
         ]);
@@ -259,6 +263,13 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       }
 
       const nextPayoutRecipient = rawMembers[currentCycle % rawMembers.length] || "";
+      let completedCycles = 0;
+      let creditScore = 0;
+      if (state.publicKey) {
+        const walletArg = nativeToScVal(state.publicKey, { type: "address" });
+        completedCycles = Number(await simulateCall(state.registryContractId, "get_completed_cycles", [walletArg]) ?? 0);
+        creditScore = Number(await simulateCall(state.registryContractId, "get_credit_score", [walletArg]) ?? 0);
+      }
 
       setState((prev) => ({
         ...prev,
@@ -268,6 +279,8 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
         currentCycle,
         contributedThisCycle,
         nextPayoutRecipient,
+        creditScore,
+        completedCycles,
       }));
       void fetchOnChainTransactions(contributionAmount, rawMembers.length);
     } catch (e) {

@@ -23,8 +23,8 @@ Loop is a trustless ROSCA (Rotating Savings and Credit Association) platform bui
 |---|---|
 | Live dApp | [loop-stellar.vercel.app](https://loop-stellar.vercel.app) |
 | Demo Video | [Watch on youtube](https://youtu.be/P-EAgVsGwMY) |
-| Pool Contract | [`CCDEDVFTT6C6YEJC472HVJJLP3U25CX5GJCL7VTDOV753IMUJ5EKXVTV`](https://stellar.expert/explorer/testnet/contract/CCDEDVFTT6C6YEJC472HVJJLP3U25CX5GJCL7VTDOV753IMUJ5EKXVTV) |
-| Member Registry | [`CA4VMD62IU7ZP4C537HY7MKURC7TAFCT3QBXENGZGVB5WQZMQU7EUO26`](https://stellar.expert/explorer/testnet/contract/CA4VMD62IU7ZP4C537HY7MKURC7TAFCT3QBXENGZGVB5WQZMQU7EUO26) |
+| Pool Contract | [`CAQLLMRJJW325YUUOB3NB4W6NDQVGUBIRH23OY5GE723GI64LQRO2MME`](https://stellar.expert/explorer/testnet/contract/CAQLLMRJJW325YUUOB3NB4W6NDQVGUBIRH23OY5GE723GI64LQRO2MME) |
+| Member Registry | [`CBDK3VMBFMJOQWCDXFO2ZOLGGTRN7X2CUFCK464GVHS6PQDXUQ4O5H3F`](https://stellar.expert/explorer/testnet/contract/CBDK3VMBFMJOQWCDXFO2ZOLGGTRN7X2CUFCK464GVHS6PQDXUQ4O5H3F) |
 | SAC Token | [`CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC) |
 | Verifiable Transaction | [`92fe668c…cd1851`](https://stellar.expert/explorer/testnet/tx/92fe668ca02bfc225a61d792b28741a5da09d8fa3b5a102fe639126b88cd1851) |
 

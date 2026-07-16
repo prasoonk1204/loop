@@ -79,7 +79,7 @@ export default function LandingPage() {
       }}>
         <div className="max-w-6xl mx-auto px-6 md:px-10 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="Loop" width={26} height={26} style={{ borderRadius: "2px" }} />
+            <Image src="/logo.png" alt="Loop" width={26} height={26} style={{ width: "auto", height: "auto", borderRadius: "2px" }} />
             <span className="text-sm font-medium tracking-wide" style={{ color: T.text1 }}>Loop</span>
           </div>
           <nav className="hidden md:flex items-center gap-7">
@@ -393,7 +393,7 @@ export default function LandingPage() {
       <footer style={{ borderTop: `1px solid ${T.line}` }}>
         <div className="max-w-6xl mx-auto px-6 md:px-10 py-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="Loop" width={22} height={22} style={{ borderRadius: "2px" }} />
+            <Image src="/logo.png" alt="Loop" width={22} height={22} style={{ width: "auto", height: "auto", borderRadius: "2px" }} />
             <span className="text-xs font-medium" style={{ color: T.text3 }}>
               Loop Savings Circle — Stellar Soroban
             </span>

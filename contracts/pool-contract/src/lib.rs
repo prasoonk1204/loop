@@ -26,6 +26,8 @@ impl PoolContract {
         }
         env.storage().instance().set(&DataKey::Token, &token);
         env.storage().instance().set(&DataKey::Registry, &registry);
+        let registry_client = MemberRegistryClient::new(&env, &registry);
+        registry_client.configure_pool(&env.current_contract_address());
     }
 
     fn get_circle_id(env: &Env) -> u32 {
@@ -138,6 +140,9 @@ impl PoolContract {
 
         // Mark as paid in MemberRegistry
         registry_client.mark_paid(&cycle_id, &local_recipient);
+        for member in members.iter() {
+            registry_client.record_payment(&member);
+        }
 
         // Mark cycle paid out locally
         env.storage().persistent().set(&paid_key, &true);
@@ -297,6 +302,7 @@ mod tests {
         let client = PoolContractClient::new(&env, &contract_id);
 
         client.initialize(&token_address, &registry_id);
+        registry_client.configure_pool(&contract_id);
 
         let members = vec![
             &env,
@@ -319,6 +325,10 @@ mod tests {
         assert_eq!(token_client.balance(&members.get(0).unwrap()), 300);
         assert_eq!(token_client.balance(&members.get(1).unwrap()), 0);
         assert_eq!(token_client.balance(&members.get(2).unwrap()), 0);
+        for m in members.iter() {
+            assert_eq!(registry_client.get_completed_cycles(&m), 1);
+            assert_eq!(registry_client.get_credit_score(&m), 10);
+        }
     }
 
     #[test]
@@ -339,6 +349,7 @@ mod tests {
         let client = PoolContractClient::new(&env, &contract_id);
 
         client.initialize(&token_address, &registry_id);
+        registry_client.initialize(&contract_id);
 
         let members = vec![
             &env,
