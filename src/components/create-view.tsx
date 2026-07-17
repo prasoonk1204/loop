@@ -21,6 +21,8 @@ export function CreateView() {
   const [amount, setAmount] = useState("100");
   const [length, setLength] = useState("10");
   const [newMember, setNewMember] = useState("");
+  const [formError, setFormError] = useState("");
+  const [creating, setCreating] = useState(false);
 
   // Default member list (pre-filled for ease of use)
   const [members, setMembers] = useState<string[]>([]);
@@ -47,19 +49,20 @@ export function CreateView() {
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault();
     const addr = newMember.trim();
-    if (!addr) return;
+    if (!addr) { setFormError("Enter a Stellar public key."); return; }
 
     // Quick validation: must be a string key or starting with G
     if (!addr.startsWith("G") || addr.length < 10) {
-      addToast("Invalid Stellar address format", "error");
+      setFormError("Use a valid Stellar public key starting with G.");
       return;
     }
     if (members.includes(addr)) {
-      addToast("Member already added", "error");
+      setFormError("This member is already in the circle.");
       return;
     }
 
     setMembers([...members, addr]);
+    setFormError("");
     setNewMember("");
     addToast("Member added to list", "success");
   };
@@ -71,28 +74,31 @@ export function CreateView() {
   };
 
   const handleCreate = async () => {
+    setFormError("");
     if (isCircleActive) {
-      addToast("Leave your current circle before creating a new one", "error");
+      setFormError("Leave your current circle before creating a new one.");
       return;
     }
     if (members.length < 2) {
-      addToast("Savings circle must have at least 2 members", "error");
+      setFormError("Add at least 2 members to create a circle.");
       return;
     }
     const parsedAmount = parseFloat(amount);
     const parsedLength = parseInt(length);
 
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      addToast("Contribution amount must be positive", "error");
+      setFormError("Contribution amount must be greater than 0.");
       return;
     }
     if (isNaN(parsedLength) || parsedLength <= 0) {
-      addToast("Cycle length must be positive", "error");
+      setFormError("Cycle length must be greater than 0.");
       return;
     }
 
-    await createCircle(members, parsedAmount, parsedLength);
-    router.push("/dashboard");
+    setCreating(true);
+    const success = await createCircle(members, parsedAmount, parsedLength);
+    setCreating(false);
+    if (success) router.push("/dashboard");
   };
 
   return (
@@ -128,6 +134,8 @@ export function CreateView() {
           </Link>
         </motion.div>
       )}
+      {formError && <div className="md:col-span-2 px-4 py-3 text-xs" role="alert" style={{ color: "oklch(70% 0.14 20)" }}>{formError}</div>}
+      {creating && <div className="md:col-span-2 px-4 py-3 text-xs" role="status" style={{ color: "oklch(78% 0.15 85)" }}>Creating circle on-chain. Confirm wallet requests…</div>}
       {/* Parameters panel */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -194,10 +202,10 @@ export function CreateView() {
         <div className="px-6 pb-6">
           <button
             onClick={handleCreate}
-            disabled={!!isCircleActive}
+            disabled={!!isCircleActive || creating}
             className="btn btn-primary w-full py-3 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Create Circle
+            {creating ? "Creating…" : "Create Circle"}
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -225,6 +233,7 @@ export function CreateView() {
               onChange={(e) => setNewMember(e.target.value)}
               className="input-field flex-1"
               placeholder="Stellar public key (G…)"
+              aria-invalid={!!formError}
             />
             <button
               type="submit"

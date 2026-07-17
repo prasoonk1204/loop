@@ -44,7 +44,7 @@ type CircleContextType = CircleState & {
   updateBalance: (balance: string) => void;
   setMode: (mode: "mock" | "soroban") => void;
   setContracts: (pool: string, registry: string, token: string) => void;
-  createCircle: (members: string[], amount: number, length: number) => Promise<void>;
+  createCircle: (members: string[], amount: number, length: number) => Promise<boolean>;
   contribute: (member: string) => Promise<void>;
   triggerPayout: () => Promise<void>;
   deleteCircle: () => Promise<void>;
@@ -449,12 +449,13 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
 
   const createCircle = async (members: string[], amount: number, length: number) => {
     // Reset registry contract first to ensure it is clean of any prior circle state
-    await submitSorobanTransaction(
+    const resetSuccess = await submitSorobanTransaction(
       state.registryContractId,
       "reset_registry",
       [nativeToScVal(state.publicKey, { type: "address" })],
       "Prior registry members cleared."
     );
+    if (!resetSuccess) return false;
 
     const registerArgs = [
       xdr.ScVal.scvVec(members.map(m => nativeToScVal(m, { type: "address" })))
@@ -465,14 +466,14 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       registerArgs,
       "Members registered in registry contract!"
     );
-    if (!regSuccess) return;
+    if (!regSuccess) return false;
 
     const args = [
       xdr.ScVal.scvVec(members.map(m => nativeToScVal(m, { type: "address" }))),
       nativeToScVal(BigInt(amount) * BigInt(10000000), { type: "i128" }),
       nativeToScVal(BigInt(length), { type: "u64" }),
     ];
-    await submitSorobanTransaction(
+    return await submitSorobanTransaction(
       state.poolContractId,
       "create_circle",
       args,
