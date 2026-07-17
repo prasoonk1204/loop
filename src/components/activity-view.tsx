@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import Link from "next/link";
 import { useCircle } from "@/lib/circle-context";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -28,7 +29,8 @@ const S = {
   error: "oklch(65% 0.16 20)",
 };
 
-function formatAddress(addr: string) {
+function formatAddress(addr: string, currentUser?: string) {
+  if (addr === currentUser) return "You";
   if (!addr) return "—";
   if (addr.length < 15) return addr;
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -50,11 +52,11 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 }
 
 export function ActivityView() {
-  const {
-    publicKey,
-    loading,
-    transactions,
-  } = useCircle();
+  const { publicKey, loading, transactions } = useCircle();
+  const [view, setView] = useState<"all" | "mine">("all");
+  const visibleTransactions = view === "mine"
+    ? transactions.filter((tx) => tx.member === publicKey)
+    : transactions;
 
   if (!publicKey) {
     return (
@@ -114,18 +116,25 @@ export function ActivityView() {
             style={{ borderBottom: `1px solid ${S.border}` }}
           >
             <Clock className="w-4 h-4" style={{ color: S.accent }} />
-            <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: S.text3 }}>
-              Contract Activity Log
-            </p>
+            <div className="flex items-center justify-between gap-3 w-full">
+              <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: S.text3 }}>Contract Activity Log</p>
+              <div className="flex gap-1">
+                <button onClick={() => setView("all")} className="px-2.5 py-1 text-[10px] uppercase tracking-widest cursor-pointer" style={{ color: view === "all" ? S.accent : S.text3, background: view === "all" ? S.accentBg : "transparent", border: `1px solid `, borderRadius: "2px" }}>All Activity</button>
+                <button onClick={() => setView("mine")} className="px-2.5 py-1 text-[10px] uppercase tracking-widest cursor-pointer" style={{ color: view === "mine" ? S.accent : S.text3, background: view === "mine" ? S.accentBg : "transparent", border: `1px solid `, borderRadius: "2px" }}>My Activity</button>
+              </div>
+            </div>
           </div>
           <div className="p-3 overflow-y-auto">
             <AnimatePresence initial={false}>
-              {transactions.length === 0 ? (
-                <div className="py-20 text-center text-xs" style={{ color: S.text3 }}>
-                  No transactions yet.
+              {visibleTransactions.length === 0 ? (
+                <div className="py-16 text-center space-y-3">
+                  <p className="text-xs" style={{ color: S.text3 }}>{view === "mine" ? "No personal transactions yet." : "No transactions yet."}</p>
+                  <Link href={view === "mine" ? "/dashboard" : "/create"} className="btn btn-secondary inline-flex px-3 py-2 text-[10px]">
+                    {view === "mine" ? "View Dashboard" : "Create a Circle"}
+                  </Link>
                 </div>
               ) : (
-                transactions.map((tx) => (
+                visibleTransactions.map((tx) => (
                   <motion.div
                     key={tx.id}
                     initial={{ opacity: 0, height: 0 }}
@@ -160,9 +169,9 @@ export function ActivityView() {
                       <div>
                         <p className="text-xs font-medium" style={{ color: S.text1 }}>
                           {tx.type === "contribute"
-                            ? <>Contribution from <span style={{ color: S.text2 }}>{formatAddress(tx.member || "")}</span></>
+                            ? <>Contribution from <span style={{ color: S.text2 }}>{formatAddress(tx.member || "", publicKey)}</span></>
                             : tx.type === "payout"
-                              ? <>Payout → <span style={{ color: S.accent }}>{formatAddress(tx.member || "")}</span></>
+                              ? <>Payout → <span style={{ color: S.accent }}>{formatAddress(tx.member || "", publicKey)}</span></>
                               : "Circle created"}
                         </p>
                         <p className="text-[10px] mt-0.5" style={{ color: S.text3 }}>
