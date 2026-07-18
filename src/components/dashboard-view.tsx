@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react"
 import Link from "next/link";
 import { useCircle } from "@/lib/circle-context";
 import { motion } from "framer-motion";
@@ -10,6 +10,7 @@ import {
   ArrowRightLeft,
   CheckCircle2,
   ArrowUpRight,
+  X,
 } from "lucide-react";
 
 const S = {
@@ -62,6 +63,7 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 
 export function DashboardView() {
+  const [confirmAction, setConfirmAction] = useState<"leave" | "delete" | null>(null);
   const {
     publicKey,
     balance,
@@ -111,6 +113,11 @@ export function DashboardView() {
             <p className="text-xs" style={{ color: S.text3 }}>
               Connect your Stellar wallet to view your savings circle and make contributions.
             </p>
+            <ol className="text-left text-xs space-y-2" style={{ color: S.text2 }}>
+              <li><span style={{ color: S.accent }}>1.</span> Connect your Stellar wallet.</li>
+              <li><span style={{ color: S.accent }}>2.</span> Join or create a savings circle.</li>
+              <li><span style={{ color: S.accent }}>3.</span> Contribute each cycle and receive your payout.</li>
+            </ol>
           </div>
         </motion.div>
       </div>
@@ -170,6 +177,25 @@ export function DashboardView() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      {confirmAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="presentation" style={{ background: "oklch(0% 0 0 / 0.7)" }}>
+          <div role="dialog" aria-modal="true" aria-labelledby="confirm-title" className="w-full max-w-sm p-6 space-y-5" style={{ background: S.bg1, border: "1px solid oklch(28% 0.007 85)", borderRadius: "4px" }}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Label>{confirmAction === "leave" ? "Leave circle" : "Delete circle"}</Label>
+                <p id="confirm-title" className="text-sm mt-2" style={{ color: S.text1 }}>Are you sure you want to {confirmAction === "leave" ? "leave this circle" : "delete this circle"}?</p>
+              </div>
+              <button aria-label="Close" onClick={() => setConfirmAction(null)} className="cursor-pointer" style={{ color: S.text3 }}><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-xs" style={{ color: S.text3 }}>The contract will handle any current-cycle contribution before this action completes.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmAction(null)} className="btn btn-secondary flex-1 py-2.5 text-xs cursor-pointer">Cancel</button>
+              <button onClick={async () => { const action = confirmAction; setConfirmAction(null); if (action === "leave") await leaveCircle(); else await deleteCircle(); }} disabled={pendingTx} className="btn btn-primary flex-1 py-2.5 text-xs cursor-pointer">Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Left col ───────────────────────────────────────────── */}
       <div className="lg:col-span-2 space-y-6">
 
@@ -352,7 +378,7 @@ export function DashboardView() {
                   <div className="flex flex-col sm:flex-row gap-3">
                     {publicKey !== members[0] ? (
                       <button
-                        onClick={leaveCircle}
+                        onClick={() => setConfirmAction("leave")}
                         disabled={pendingTx}
                         className="btn btn-secondary flex-1 py-2.5 text-xs font-semibold cursor-pointer border-red-500/20 text-red-400 hover:bg-red-500/5 hover:border-red-500/40"
                       >
@@ -360,7 +386,7 @@ export function DashboardView() {
                       </button>
                     ) : (
                       <button
-                        onClick={deleteCircle}
+                        onClick={() => setConfirmAction("delete")}
                         disabled={pendingTx}
                         className="btn btn-secondary flex-1 py-2.5 text-xs font-semibold cursor-pointer border-red-500/20 text-red-400 hover:bg-red-500/5 hover:border-red-500/40"
                       >
