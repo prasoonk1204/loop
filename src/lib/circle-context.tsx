@@ -33,6 +33,7 @@ export type CircleState = {
   creditScore: number;
   completedCycles: number;
   loading: boolean;
+  errorMessage: string;
   pendingTx: boolean;
   transactions: Transaction[];
   autoSimulate: boolean;
@@ -50,6 +51,7 @@ type CircleContextType = CircleState & {
   deleteCircle: () => Promise<void>;
   leaveCircle: () => Promise<void>;
   setAutoSimulate: (simulate: boolean) => void;
+  refreshCircle: () => void;
   addToast: (message: string, type: "success" | "error" | "info") => void;
   toasts: Array<{ id: string; message: string; type: "success" | "error" | "info" }>;
 };
@@ -74,6 +76,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
     creditScore: 0,
     completedCycles: 0,
     loading: true,
+    errorMessage: "",
     pendingTx: false,
     transactions: [],
     autoSimulate: false,
@@ -196,7 +199,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    setState((prev) => ({ ...prev, loading: true }));
+    setState((prev) => ({ ...prev, loading: true, errorMessage: "" }));
     try {
       const sourceAddr = state.publicKey || "GCQKBI3RFBB7N73FLCG2IHSX57LF5RN7J4OBONRDBKCHP7P2YG45OZ43";
       const sourceAccount = new Account(sourceAddr, "0");
@@ -285,6 +288,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       void fetchOnChainTransactions(contributionAmount, rawMembers.length);
     } catch (e) {
       console.error("Error fetching Soroban circle state:", e);
+      setState((prev) => ({ ...prev, errorMessage: "Could not load circle data. Check your connection and try again." }));
     } finally {
       setState((prev) => ({ ...prev, loading: false }));
     }
@@ -388,6 +392,10 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       setState((prev) => ({ ...prev, pendingTx: false }));
     }
   }, [state.publicKey, state.poolContractId, state.contributionAmount, state.currentCycle, addToast, fetchCircleState]);
+
+  const refreshCircle = useCallback(() => {
+    void fetchCircleState(state.poolContractId);
+  }, [fetchCircleState, state.poolContractId]);
 
   const connect = (address: string, name: string, balance: string) => {
     if (typeof window !== "undefined") {
@@ -649,6 +657,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
         deleteCircle,
         leaveCircle,
         setAutoSimulate,
+        refreshCircle,
         addToast,
         toasts,
       }}

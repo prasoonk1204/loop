@@ -76,6 +76,8 @@ export function DashboardView() {
     completedCycles,
     pendingTx,
     loading,
+    errorMessage,
+    refreshCircle,
     contribute,
     triggerPayout,
     deleteCircle,
@@ -136,6 +138,20 @@ export function DashboardView() {
         <p className="text-xs uppercase tracking-widest font-semibold animate-pulse" style={{ color: "oklch(45% 0.005 85)" }}>
           Synchronizing with Stellar Ledger...
         </p>
+      </div>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="max-w-md mx-auto my-12 text-center space-y-5">
+        <Card>
+          <div className="p-8 space-y-5">
+            <h2 className="text-xl font-light">Could not load circle data</h2>
+            <p className="text-xs">{errorMessage}</p>
+            <button onClick={refreshCircle} className="btn btn-primary w-full py-3 text-xs cursor-pointer">Try again</button>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -314,6 +330,7 @@ export function DashboardView() {
               </p>
             </div>
             <div className="p-6 space-y-4">
+              <p className="text-xs" style={{ color: S.text3 }}>If a member misses a contribution, payout stays locked until everyone pays. Members can leave for a current-cycle refund; the creator can delete the circle and refund current contributors.</p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => contribute(publicKey)}

@@ -54,10 +54,12 @@ export function CreateView() {
     // Quick validation: must be a string key or starting with G
     if (!addr.startsWith("G") || addr.length < 10) {
       setFormError("Use a valid Stellar public key starting with G.");
+      addToast("Invalid Stellar address format", "error");
       return;
     }
     if (members.includes(addr)) {
       setFormError("This member is already in the circle.");
+      addToast("Member already added", "error");
       return;
     }
 
@@ -81,6 +83,7 @@ export function CreateView() {
     }
     if (members.length < 2) {
       setFormError("Add at least 2 members to create a circle.");
+      addToast("Savings circle must have at least 2 members", "error");
       return;
     }
     const parsedAmount = parseFloat(amount);

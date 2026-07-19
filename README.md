@@ -135,6 +135,23 @@ Browser
 
 ---
 
+## User Feedback Implemented
+
+| Feedback | Change |
+|---|---|
+| Improve mobile responsiveness. | Reduced mobile page padding, kept controls flexible, and improved small-screen layouts. |
+| Add onboarding guidance for first-time wallet users. | Added three-step guidance to the disconnected dashboard state. |
+| I cannot see my personal contributions. | Added All Activity and My Activity tabs with wallet-specific filtering. |
+| Show clearer transaction status while creating a circle. | Added inline creating status while wallet requests and on-chain confirmations complete. |
+| Explain what happens when a member misses a contribution. | Added current contract behavior: payout stays locked; leave and delete refund rules are explained. |
+| Make wallet addresses easier to identify. | Personal addresses now display as You in activity entries. |
+| Form errors are easy to miss. | Added inline field and form validation messages on circle creation. |
+| Add retry buttons when blockchain data fails to load. | Added a Try again action when dashboard Soroban reads fail. |
+| Dialogs feel disconnected from the page. | Added a consistent confirmation dialog for leaving or deleting a circle. |
+| Empty pages do not tell me what to do next. | Added next-step buttons for empty contract and personal activity views. |
+
+---
+
 ## Installation & Local Setup
 
 ### Prerequisites
