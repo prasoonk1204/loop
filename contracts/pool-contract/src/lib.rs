@@ -349,7 +349,7 @@ mod tests {
         let client = PoolContractClient::new(&env, &contract_id);
 
         client.initialize(&token_address, &registry_id);
-        registry_client.initialize(&contract_id);
+        registry_client.configure_pool(&contract_id);
 
         let members = vec![
             &env,

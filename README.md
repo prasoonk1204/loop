@@ -23,6 +23,7 @@ Loop is a trustless ROSCA (Rotating Savings and Credit Association) platform bui
 |---|---|
 | Live dApp | [loop-stellar.vercel.app](https://loop-stellar.vercel.app) |
 | Demo Video | [Watch on youtube](https://youtu.be/P-EAgVsGwMY) |
+| Circle Factory | [`CBPQP7IAZTMUL6YXFBH3Z5ANR663G3YOQG4CWP2TUSGSDOOM5N5AV5GW`](https://stellar.expert/explorer/testnet/contract/CBPQP7IAZTMUL6YXFBH3Z5ANR663G3YOQG4CWP2TUSGSDOOM5N5AV5GW) |
 | Pool Contract | [`CAQLLMRJJW325YUUOB3NB4W6NDQVGUBIRH23OY5GE723GI64LQRO2MME`](https://stellar.expert/explorer/testnet/contract/CAQLLMRJJW325YUUOB3NB4W6NDQVGUBIRH23OY5GE723GI64LQRO2MME) |
 | Member Registry | [`CBDK3VMBFMJOQWCDXFO2ZOLGGTRN7X2CUFCK464GVHS6PQDXUQ4O5H3F`](https://stellar.expert/explorer/testnet/contract/CBDK3VMBFMJOQWCDXFO2ZOLGGTRN7X2CUFCK464GVHS6PQDXUQ4O5H3F) |
 | SAC Token | [`CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC) |
@@ -76,14 +77,20 @@ Loop is a trustless ROSCA (Rotating Savings and Credit Association) platform bui
 - **Live activity log** — contributions and payouts surface in real-time on the dashboard, each linked to its on-chain transaction hash.
 - **Leave / delete circle** — non-creator members can leave and receive a refund of their current-cycle contribution. The creator can dissolve the circle entirely and refund all contributors.
 - **Dual contract architecture** — a `pool-contract` handles fund flows; a `member-registry` contract independently tracks membership and validates payout recipients, preventing recipient mismatch attacks.
+- **Circle factory** — one deployed factory creates independent pool/registry instances and stores their addresses, so multiple circles can run concurrently and remain discoverable from one contract.
 - **Wallet-gated dashboard** — the dashboard requires a connected wallet before fetching any on-chain state.
 
 ---
 
+## Monitoring & Analytics
+
+- `/api/health` provides a lightweight uptime check for deployment monitoring.
+- `/activity` displays Soroban contract events; it is on-chain activity, not external product analytics.
+
 ## Future Roadmap
 
 - **Scheduled automatic payouts** — trigger payout via a Stellar ledger time condition instead of requiring manual invocation.
-- **Multi-circle support** — allow a single wallet to participate in multiple independent circles simultaneously.
+- **Multi-circle participation** — let a single wallet join multiple factory-managed circles from one dashboard.
 - **Circle invitations** — off-chain invite links that add a member's key to a pending circle before deployment.
 - **Push notifications** — webhook-driven alerts (contribution received, payout triggered, new cycle started) via the existing API layer.
 - **Mobile-first PWA** — installable progressive web app with deep-link support for wallet signing flows.
@@ -94,7 +101,7 @@ Loop is a trustless ROSCA (Rotating Savings and Credit Association) platform bui
 
 ## Architecture
 
-Loop is split into two layers: a Next.js frontend and two Soroban smart contracts. They interact exclusively through signed Stellar transactions — no backend, no database.
+Loop is split into two layers: a Next.js frontend and three Soroban smart contracts. They interact exclusively through signed Stellar transactions — no backend, no database. The factory records every created pool and registry pair in one on-chain list, while each circle keeps its own isolated state.
 
 ### Frontend
 
@@ -102,7 +109,7 @@ The app shell (`layout.tsx`) handles wallet connection via Stellar Wallets Kit a
 
 ### Smart contracts
 
-Two contracts work in tandem:
+The factory creates and tracks independent circle instances. Each instance uses a pool and registry contract working in tandem:
 
 **Pool Contract** is the escrow engine. It holds contributed XLM, tracks which members have paid in each cycle, and releases the full pot to the recipient when all contributions are present. It never decides the recipient on its own.
 
@@ -114,6 +121,9 @@ Browser
         │
         ▼
   Soroban RPC (simulateTransaction / sendTransaction)
+        │
+        ├── Circle Factory
+        │     └── tracks independent Pool + Registry pairs
         │
         ├── Pool Contract
         │     ├── create_circle
@@ -128,7 +138,7 @@ Browser
 ### State lifecycle
 
 1. **Connect** — Wallets Kit opens the auth modal; Horizon returns the current XLM balance.
-2. **Create circle** — frontend calls `reset_registry` → `register_members` on the registry, then `create_circle` on the pool.
+2. **Create circle** — frontend calls the factory, which deploys and records a fresh pool/registry pair for the circle.
 3. **Contribute** — each member signs `contribute(member, cycle_id)`; XLM moves from the member's account to the pool contract address.
 4. **Payout** — any member calls `payout(cycle_id)`; pool verifies all contributions, cross-checks the registry, transfers the full pot.
 5. **Next cycle** — dashboard re-fetches state via read-only simulate calls; cycle counter increments automatically.
