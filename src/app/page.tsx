@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { FactoryActivityPreview } from "@/components/factory-analytics";
 
 /* ─── design tokens ─────────────────────────────────────────── */
 const T = {
@@ -192,7 +193,7 @@ export default function LandingPage() {
                 {[
                   { static: "< $0.001", label: "Transaction fee", sub: "per operation" },
                   { static: "~5 sec", label: "Ledger finality", sub: "Stellar network" },
-                  { static: "2", label: "Live contracts", sub: "pool + registry" },
+                  { static: "Multiple", label: "Live contracts", sub: "factory + pool + registry" },
                   { static: "Zero", label: "Custodians", sub: "non-custodial" },
                 ].map((s, i) => (
                   <div key={i} className="p-6 flex flex-col gap-1.5"
@@ -223,13 +224,13 @@ export default function LandingPage() {
             <div className="flex items-center gap-3 py-3.5" style={{ borderBottom: `1px solid ${T.line}` }}>
               <span className="text-[9px] uppercase tracking-widest font-semibold px-1.5 py-0.5"
                 style={{ background: T.goldDim, color: T.gold, border: `1px solid ${T.gold}33`, borderRadius: "2px" }}>
-                Pool
+                Factory
               </span>
               <span className="text-[10px] font-mono truncate" style={{ color: T.text3 }}>
-                CCDEDVFTT6C6YEJC472HVJJLP3U25CX5GJCL7VTDOV753IMUJ5EKXVTV
+              CBPQP7IAZTMUL6YXFBH3Z5ANR663G3YOQG4CWP2TUSGSDOOM5N5AV5GW
               </span>
               <a
-                href="https://stellar.expert/explorer/testnet/contract/CCDEDVFTT6C6YEJC472HVJJLP3U25CX5GJCL7VTDOV753IMUJ5EKXVTV"
+                href="https://stellar.expert/explorer/testnet/contract/CBPQP7IAZTMUL6YXFBH3Z5ANR663G3YOQG4CWP2TUSGSDOOM5N5AV5GW"
                 target="_blank" rel="noreferrer"
                 className="ml-auto flex items-center gap-1 text-[10px] uppercase tracking-widest font-semibold shrink-0 hover:opacity-70 transition-opacity"
                 style={{ color: T.gold }}
@@ -329,6 +330,8 @@ export default function LandingPage() {
                 { icon: "◐", title: "Multi-wallet support", body: "Connect with Freighter, Lobstr, xBull or any wallet supported by Stellar Wallets Kit — no lock-in." },
                 { icon: "◧", title: "Deterministic order", body: "Payout order is locked at circle creation. No randomness, no disputes." },
                 { icon: "◪", title: "Creator-defined membership", body: "The circle creator sets the member list and contribution amount. Every participant is known before any funds move." },
+                { icon: "◫", title: "Factory-managed circles", body: "The factory tracks each circle's own pool and registry, then finds the matching circle for a connected wallet." },
+                { icon: "▣", title: "History and notifications", body: "Filter personal activity, download a CSV, and opt in to browser notifications for confirmed activity." },
               ].map((f) => (
                 <div key={f.title} className="flex items-start gap-6 py-6" style={{ borderBottom: `1px solid ${T.lineHi}` }}>
                   <span className="text-lg mt-0.5 shrink-0 w-6 text-center" style={{ color: T.gold }}>{f.icon}</span>
@@ -343,6 +346,7 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <FactoryActivityPreview />
       <FaqSection />
       {/* ── Roadmap ───────────────────────────────────────────── */}
       <section id="roadmap" style={{ borderTop: `1px solid ${T.line}`, background: T.bg }}>
@@ -357,15 +361,8 @@ export default function LandingPage() {
                 phase: "Near-term", phaseColor: T.gold,
                 items: [
                   { title: "Scheduled payouts", body: "Trigger payouts automatically via a Stellar ledger time condition — no manual invocation required." },
-                  { title: "Push notifications", body: "Webhook-driven alerts when a contribution is received, a payout is triggered, or a new cycle starts." },
+                  { title: "Background push notifications", body: "Deliver alerts when the app is closed, beyond the current browser notification support." },
                   { title: "Circle invitations", body: "Off-chain invite links that pre-register a member's key to a pending circle before deployment." },
-                ],
-              },
-              {
-                phase: "Mid-term", phaseColor: "oklch(70% 0.10 85)",
-                items: [
-                  { title: "Multi-circle support", body: "A single wallet participates in multiple independent circles simultaneously, each tracked separately." },
-                  { title: "Contribution history export", body: "Download a full CSV of all cycle activity — contributions, payouts, timestamps, transaction hashes." },
                 ],
               },
               {

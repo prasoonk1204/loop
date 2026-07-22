@@ -65,9 +65,9 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
     publicKey: "",
     walletName: "",
     balance: "0",
-    poolContractId: process.env.NEXT_PUBLIC_SOROBAN_POOL_CONTRACT_ID || "",
+    poolContractId: "",
     factoryContractId: process.env.NEXT_PUBLIC_SOROBAN_FACTORY_CONTRACT_ID || "",
-    registryContractId: process.env.NEXT_PUBLIC_SOROBAN_REGISTRY_CONTRACT_ID || "",
+    registryContractId: "",
     tokenContractId: process.env.NEXT_PUBLIC_SOROBAN_TOKEN_CONTRACT_ID || "",
     members: [],
     contributionAmount: 0,
@@ -96,7 +96,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
 
   const fetchOnChainTransactions = useCallback(async (currentContributionAmount?: number, currentMembersLength?: number, poolIdOverride?: string) => {
     try {
-      const poolId = poolIdOverride || process.env.NEXT_PUBLIC_SOROBAN_POOL_CONTRACT_ID || "";
+      const poolId = poolIdOverride || "";
       if (!poolId || poolId.startsWith("CC...")) return;
 
       const latestLedgerRes = await rpcServer.getLatestLedger();
@@ -195,7 +195,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state.contributionAmount, state.members.length]);
 
-  const fetchCircleState = useCallback(async (contractId: string) => {
+  const fetchCircleState = useCallback(async (contractId: string, registryIdOverride?: string) => {
     if (!contractId || contractId.startsWith("CC...")) {
       setState((prev) => ({ ...prev, loading: false }));
       return;
@@ -240,6 +240,11 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      if (state.publicKey && !rawMembers.includes(state.publicKey)) {
+        setState((prev) => ({ ...prev, members: [], contributionAmount: 0, cycleLength: 0, currentCycle: 0, contributedThisCycle: [], nextPayoutRecipient: "", transactions: [] }));
+        return;
+      }
+
       const contributionVal = await simulateCall(contractId, "get_contribution_amount");
       const contributionAmount = contributionVal !== null ? Number(BigInt(contributionVal) / BigInt(10000000)) : 0;
 
@@ -270,10 +275,11 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       const nextPayoutRecipient = rawMembers[currentCycle % rawMembers.length] || "";
       let completedCycles = 0;
       let creditScore = 0;
+      const registryId = registryIdOverride || state.registryContractId;
       if (state.publicKey) {
         const walletArg = nativeToScVal(state.publicKey, { type: "address" });
-        completedCycles = Number(await simulateCall(state.registryContractId, "get_completed_cycles", [walletArg]) ?? 0);
-        creditScore = Number(await simulateCall(state.registryContractId, "get_credit_score", [walletArg]) ?? 0);
+        completedCycles = Number(await simulateCall(registryId, "get_completed_cycles", [walletArg]) ?? 0);
+        creditScore = Number(await simulateCall(registryId, "get_credit_score", [walletArg]) ?? 0);
       }
 
       setState((prev) => ({
@@ -300,7 +306,8 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
     contractId: string,
     functionName: string,
     args: (xdr.ScVal)[],
-    successMsg: string
+    successMsg: string,
+    skipRefresh = false
   ) => {
     if (!state.publicKey) {
       addToast("Connect wallet first", "error");
@@ -378,7 +385,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
         transactions: [newTx, ...prev.transactions],
       }));
 
-      await fetchCircleState(state.poolContractId);
+      if (!skipRefresh) await fetchCircleState(state.poolContractId);
 
       const horizonAccount = await horizonServer.loadAccount(state.publicKey);
       const balance = nativeBalance(horizonAccount.balances);
@@ -413,9 +420,14 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       };
     });
     addToast(`Connected with ${name}`, "success");
-    const poolId = process.env.NEXT_PUBLIC_SOROBAN_POOL_CONTRACT_ID || "";
-    fetchCircleState(poolId);
+    setState((prev) => ({ ...prev, transactions: [] }));
   };
+
+
+  useEffect(() => {
+    if (state.publicKey) void discoverWalletCircle(state.publicKey);
+  }, [state.publicKey]);
+
 
   const disconnect = () => {
     if (typeof window !== "undefined") {
@@ -441,9 +453,9 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({
       ...prev,
       mode: "soroban",
-      poolContractId: process.env.NEXT_PUBLIC_SOROBAN_POOL_CONTRACT_ID || "",
+      poolContractId: "",
       factoryContractId: process.env.NEXT_PUBLIC_SOROBAN_FACTORY_CONTRACT_ID || "",
-      registryContractId: process.env.NEXT_PUBLIC_SOROBAN_REGISTRY_CONTRACT_ID || "",
+      registryContractId: "",
       tokenContractId: process.env.NEXT_PUBLIC_SOROBAN_TOKEN_CONTRACT_ID || "",
     }));
   };
@@ -458,8 +470,8 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
     addToast("Contract configurations updated", "success");
   };
 
-  const readContract = useCallback(async (contractId: string, functionName: string) => {
-    const sourceAddr = state.publicKey || "GCQKBI3RFBB7N73FLCG2IHSX57LF5RN7J4OBONRDBKCHP7P2YG45OZ43";
+  const readContract = useCallback(async (contractId: string, functionName: string, walletAddress = state.publicKey) => {
+    const sourceAddr = walletAddress || "GCQKBI3RFBB7N73FLCG2IHSX57LF5RN7J4OBONRDBKCHP7P2YG45OZ43";
     const account = new Account(sourceAddr, "0");
     const tx = new TransactionBuilder(account, { fee: "100", networkPassphrase: STELLAR_NETWORK_PASSPHRASE })
       .addOperation(Operation.invokeContractFunction({ contract: contractId, function: functionName, args: [] }))
@@ -470,64 +482,46 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
     return scValToNative(simulation.result.retval);
   }, [state.publicKey]);
 
-  const createCircle = async (members: string[], amount: number, length: number) => {
-    if (state.factoryContractId) {
-      const success = await submitSorobanTransaction(
-        state.factoryContractId,
-        "create",
-        [nativeToScVal(state.publicKey, { type: "address" }), xdr.ScVal.scvVec(members.map((m) => nativeToScVal(m, { type: "address" }))), nativeToScVal(BigInt(amount) * BigInt(10000000), { type: "i128" }), nativeToScVal(BigInt(length), { type: "u64" })],
-        "Circle created through factory."
-      );
-      if (!success) return false;
-      const circles = await readContract(state.factoryContractId, "get_circles") as Array<{ pool: string; registry: string; creator: string }> | null;
-      const latest = circles?.[circles.length - 1];
-      if (!latest) {
-        addToast("Circle created, but its address could not be loaded. Refresh and try again.", "error");
-        return false;
-      }
-      setState((prev) => ({
-        ...prev,
-        poolContractId: latest.pool,
-        registryContractId: latest.registry,
-        members,
-        contributionAmount: amount,
-        cycleLength: length,
-        currentCycle: 0,
-      }));
-      await fetchCircleState(latest.pool);
-      return true;
+  const discoverWalletCircle = useCallback(async (walletAddress: string) => {
+    if (!state.factoryContractId) {
+      setState((prev) => ({ ...prev, poolContractId: "", registryContractId: "", members: [], transactions: [], loading: false }));
+      return;
     }
-    // Reset registry contract first to ensure it is clean of any prior circle state
-    const resetSuccess = await submitSorobanTransaction(
-      state.registryContractId,
-      "reset_registry",
-      [nativeToScVal(state.publicKey, { type: "address" })],
-      "Prior registry members cleared."
-    );
-    if (!resetSuccess) return false;
+    const circles = await readContract(state.factoryContractId, "get_circles", walletAddress) as Array<{ pool: string; registry: string; creator: string }> | null;
+    for (const circle of circles || []) {
+      const members = await readContract(circle.pool, "get_members", walletAddress) as string[] | null;
+      if (members?.includes(walletAddress)) {
+        setState((prev) => ({ ...prev, poolContractId: circle.pool, registryContractId: circle.registry }));
+        await fetchCircleState(circle.pool, circle.registry);
+        return;
+      }
+    }
+    setState((prev) => ({ ...prev, poolContractId: "", registryContractId: "", members: [], contributionAmount: 0, cycleLength: 0, currentCycle: 0, contributedThisCycle: [], nextPayoutRecipient: "", transactions: [], loading: false }));
+  }, [state.factoryContractId, readContract, fetchCircleState]);
 
-    const registerArgs = [
-      xdr.ScVal.scvVec(members.map(m => nativeToScVal(m, { type: "address" })))
-    ];
-    const regSuccess = await submitSorobanTransaction(
-      state.registryContractId,
-      "register_members",
-      registerArgs,
-      "Members registered in registry contract!"
-    );
-    if (!regSuccess) return false;
 
-    const args = [
-      xdr.ScVal.scvVec(members.map(m => nativeToScVal(m, { type: "address" }))),
-      nativeToScVal(BigInt(amount) * BigInt(10000000), { type: "i128" }),
-      nativeToScVal(BigInt(length), { type: "u64" }),
-    ];
-    return await submitSorobanTransaction(
-      state.poolContractId,
-      "create_circle",
-      args,
-      "Savings circle created on-chain!"
+  const createCircle = async (members: string[], amount: number, length: number) => {
+    if (!state.factoryContractId) {
+      addToast("Circle factory is not configured", "error");
+      return false;
+    }
+    const success = await submitSorobanTransaction(
+      state.factoryContractId,
+      "create",
+      [nativeToScVal(state.publicKey, { type: "address" }), xdr.ScVal.scvVec(members.map((m) => nativeToScVal(m, { type: "address" }))), nativeToScVal(BigInt(amount) * BigInt(10000000), { type: "i128" }), nativeToScVal(BigInt(length), { type: "u64" })],
+      "Circle created through factory.",
+      true
     );
+    if (!success) return false;
+    const circles = await readContract(state.factoryContractId, "get_circles") as Array<{ pool: string; registry: string; creator: string }> | null;
+    const latest = circles?.[circles.length - 1];
+    if (!latest) {
+      addToast("Circle created, but its address could not be loaded. Refresh and try again.", "error");
+      return false;
+    }
+    setState((prev) => ({ ...prev, poolContractId: latest.pool, registryContractId: latest.registry, members, contributionAmount: amount, cycleLength: length, currentCycle: 0 }));
+    await fetchCircleState(latest.pool, latest.registry);
+    return true;
   };
 
   const contribute = async () => {
@@ -609,6 +603,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
   const setAutoSimulate = () => {
   };
 
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const stateToSave = {
@@ -624,18 +619,8 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       };
       localStorage.setItem("stellar-loop-circle-data", JSON.stringify(stateToSave));
     }
-  }, [
-    state.publicKey,
-    state.walletName,
-    state.balance,
-    state.poolContractId,
-    state.factoryContractId,
-    state.registryContractId,
-    state.tokenContractId,
-    state.transactions,
-  ]);
+  }, [state.publicKey, state.walletName, state.balance, state.poolContractId, state.factoryContractId, state.registryContractId, state.tokenContractId, state.transactions]);
 
-  // Initialization on mount: restore from localStorage and env
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedDataStr = localStorage.getItem("stellar-loop-circle-data");
@@ -643,12 +628,7 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
       const savedWalletName = localStorage.getItem("stellar-loop-wallet-name");
 
       setState((prev) => {
-        const updated = { ...prev };
-        updated.mode = "soroban";
-        updated.poolContractId = process.env.NEXT_PUBLIC_SOROBAN_POOL_CONTRACT_ID || "";
-        updated.registryContractId = process.env.NEXT_PUBLIC_SOROBAN_REGISTRY_CONTRACT_ID || "";
-        updated.tokenContractId = process.env.NEXT_PUBLIC_SOROBAN_TOKEN_CONTRACT_ID || "";
-
+        const updated = { ...prev, mode: "soroban" as const, poolContractId: "", registryContractId: "", tokenContractId: process.env.NEXT_PUBLIC_SOROBAN_TOKEN_CONTRACT_ID || "" };
         if (savedDataStr) {
           try {
             const savedData = JSON.parse(savedDataStr);
@@ -657,7 +637,6 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
             console.error("Failed to parse saved circle data", e);
           }
         }
-
         return updated;
       });
 
@@ -666,24 +645,14 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
           try {
             const account = await horizonServer.loadAccount(savedPublicKey);
             const bal = nativeBalance(account.balances);
-            setState((prev) => {
-              return {
-                ...prev,
-                publicKey: savedPublicKey,
-                walletName: savedWalletName,
-                balance: bal,
-              };
-            });
+            setState((prev) => ({ ...prev, publicKey: savedPublicKey, walletName: savedWalletName, balance: bal }));
           } catch (e) {
             console.error("Failed to auto-reconnect wallet", e);
           }
         })();
       }
-
-      const contractId = process.env.NEXT_PUBLIC_SOROBAN_POOL_CONTRACT_ID || "";
-      fetchCircleState(contractId);
     }
-  }, [fetchCircleState]);
+  }, []);
 
   return (
     <CircleContext.Provider

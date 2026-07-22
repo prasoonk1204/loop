@@ -17,7 +17,8 @@ import {
   AlertCircle,
   CheckCircle,
   Info,
-  Clock
+  Clock,
+  BarChart3
 } from "lucide-react";
 
 const S = {
@@ -83,6 +84,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/create", label: "New Circle", icon: PlusCircle },
     { href: "/activity", label: "Activity", icon: Clock },
+    { href: "/analytics", label: "Analytics", icon: BarChart3 },
   ];
 
   return (

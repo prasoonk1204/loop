@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCircle } from "@/lib/circle-context";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,7 +16,7 @@ import {
 
 export function CreateView() {
   const router = useRouter();
-  const { createCircle, publicKey, mode, members: activeMembers, addToast } = useCircle();
+  const { createCircle, publicKey, mode, loading, members: activeMembers, addToast } = useCircle();
   const [amount, setAmount] = useState("100");
   const [length, setLength] = useState("10");
   const [newMember, setNewMember] = useState("");
@@ -26,8 +25,7 @@ export function CreateView() {
 
   // Default member list (pre-filled for ease of use)
   const [members, setMembers] = useState<string[]>([]);
-
-  const isCircleActive = !!publicKey && activeMembers && activeMembers.length > 0;
+  const isCircleActive = Boolean(publicKey && activeMembers?.includes(publicKey));
 
   // Sync members list when mode or connected wallet changes
   React.useEffect(() => {
@@ -77,10 +75,8 @@ export function CreateView() {
 
   const handleCreate = async () => {
     setFormError("");
-    if (isCircleActive) {
-      setFormError("Leave your current circle before creating a new one.");
-      return;
-    }
+    if (publicKey && loading) { setFormError("Still checking your current circle. Try again in a moment."); return; }
+    if (isCircleActive) { setFormError("You are already registered in a circle. Leave it before creating another."); return; }
     if (members.length < 2) {
       setFormError("Add at least 2 members to create a circle.");
       addToast("Savings circle must have at least 2 members", "error");
@@ -107,36 +103,7 @@ export function CreateView() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
       {/* Already-in-circle notice */}
-      {isCircleActive && (
-        <motion.div
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-          className="md:col-span-2 flex items-start md:flex-row flex-col gap-3 px-5 py-4"
-          style={{
-            background: "oklch(78% 0.15 85 / 0.07)",
-            border: "1px solid oklch(78% 0.15 85 / 0.3)",
-            borderRadius: "4px",
-          }}
-        >
-          <Users className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "oklch(78% 0.15 85)" }} />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium" style={{ color: "oklch(78% 0.15 85)" }}>
-              You are already in an active circle
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: "oklch(65% 0.008 85)" }}>
-              Only one circle can be active at a time. Leave or delete your current circle from the dashboard before creating a new one.
-            </p>
-          </div>
-          <Link
-            href="/dashboard"
-            className="btn btn-primary py-2 px-4 text-xs shrink-0"
-          >
-            Go to Dashboard
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </motion.div>
-      )}
+      {isCircleActive && <div className="md:col-span-2 flex items-center gap-3 px-5 py-4 text-sm" role="status" style={{ color: "oklch(78% 0.15 85)", background: "oklch(78% 0.15 85 / 0.07)", border: "1px solid oklch(78% 0.15 85 / 0.25)", borderRadius: "4px" }}><Users className="w-4 h-4 shrink-0" /> You are already registered in a circle. Leave it before creating another.</div>}
       {formError && <div className="md:col-span-2 px-4 py-3 text-xs" role="alert" style={{ color: "oklch(70% 0.14 20)" }}>{formError}</div>}
       {creating && <div className="md:col-span-2 px-4 py-3 text-xs" role="status" style={{ color: "oklch(78% 0.15 85)" }}>Creating circle on-chain. Confirm wallet requests…</div>}
       {/* Parameters panel */}
@@ -205,7 +172,7 @@ export function CreateView() {
         <div className="px-6 pb-6">
           <button
             onClick={handleCreate}
-            disabled={!!isCircleActive || creating}
+            disabled={(publicKey && loading) || isCircleActive || creating}
             className="btn btn-primary w-full py-3 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {creating ? "Creating…" : "Create Circle"}

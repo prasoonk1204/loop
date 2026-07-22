@@ -24,10 +24,10 @@ Loop is a trustless ROSCA (Rotating Savings and Credit Association) platform bui
 | Live dApp | [loop-stellar.vercel.app](https://loop-stellar.vercel.app) |
 | Demo Video | [Watch on youtube](https://youtu.be/P-EAgVsGwMY) |
 | Circle Factory | [`CBPQP7IAZTMUL6YXFBH3Z5ANR663G3YOQG4CWP2TUSGSDOOM5N5AV5GW`](https://stellar.expert/explorer/testnet/contract/CBPQP7IAZTMUL6YXFBH3Z5ANR663G3YOQG4CWP2TUSGSDOOM5N5AV5GW) |
-| Pool Contract | [`CAQLLMRJJW325YUUOB3NB4W6NDQVGUBIRH23OY5GE723GI64LQRO2MME`](https://stellar.expert/explorer/testnet/contract/CAQLLMRJJW325YUUOB3NB4W6NDQVGUBIRH23OY5GE723GI64LQRO2MME) |
-| Member Registry | [`CBDK3VMBFMJOQWCDXFO2ZOLGGTRN7X2CUFCK464GVHS6PQDXUQ4O5H3F`](https://stellar.expert/explorer/testnet/contract/CBDK3VMBFMJOQWCDXFO2ZOLGGTRN7X2CUFCK464GVHS6PQDXUQ4O5H3F) |
+| Pool Contract (example circle) | [`CAT3DNIAOEH7KYE5WB4UPKSETDUO33BQ6EI7ZQXQIU4NSE2KPFXQTLJW`](https://stellar.expert/explorer/testnet/contract/CAT3DNIAOEH7KYE5WB4UPKSETDUO33BQ6EI7ZQXQIU4NSE2KPFXQTLJW) |
+| Member Registry (same circle) | [`CANYQ4EUAJC43RJAF5QIMAT2OVYEUAOIBM7EP6EV62WMWLMSFXRCRO4A`](https://stellar.expert/explorer/testnet/contract/CANYQ4EUAJC43RJAF5QIMAT2OVYEUAOIBM7EP6EV62WMWLMSFXRCRO4A) |
 | SAC Token | [`CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC) |
-| Verifiable Transaction | [`92fe668c…cd1851`](https://stellar.expert/explorer/testnet/tx/92fe668ca02bfc225a61d792b28741a5da09d8fa3b5a102fe639126b88cd1851) |
+| Verifiable Transaction (3rd-cycle payout) | [`54b756db…0f1edc`](https://stellar.expert/explorer/testnet/tx/54b756ad473fc4457edef4db6ca5f09b77ca1ffee988609dc9a11c575b0f1edc) |
 
 ---
 
@@ -79,29 +79,39 @@ Loop is a trustless ROSCA (Rotating Savings and Credit Association) platform bui
 - **Dual contract architecture** — a `pool-contract` handles fund flows; a `member-registry` contract independently tracks membership and validates payout recipients, preventing recipient mismatch attacks.
 - **Circle factory** — one deployed factory creates independent pool/registry instances and stores their addresses, so multiple circles can run concurrently and remain discoverable from one contract.
 - **Wallet-gated dashboard** — the dashboard requires a connected wallet before fetching any on-chain state.
+- **Factory-based wallet discovery** — on connect, the app finds the wallet's matching circle from the factory and loads that circle's own pool and registry.
+- **Contribution history export** — download the visible All Activity or My Activity records as CSV.
+- **Browser notifications** — opt in to notifications when new circle activity is confirmed.
+- **FAQ and onboarding guidance** — common questions and first-use wallet guidance are available in the UI.
 
 ---
 
 ## Monitoring & Analytics
 
 - `/api/health` provides a lightweight uptime check for deployment monitoring.
-- `/activity` displays Soroban contract events; it is on-chain activity, not external product analytics.
+- `/activity` displays the selected circle's Soroban events.
+- `/analytics` reads the factory circle list and aggregates activity from every factory-managed pool without requiring a wallet. Activity loads 15 events per page with a Load more control.
+- This is on-chain activity, not external product analytics.
+
+## Circle Discovery
+
+The frontend uses `NEXT_PUBLIC_SOROBAN_FACTORY_CONTRACT_ID` as the source of truth for circle discovery. On wallet connect, it reads the factory circle list, checks each pool's `get_members()` result for an exact wallet-address match, and loads the matching pool and registry. The configured pool and registry IDs are not used as dashboard fallbacks.
+
+A wallet that is already found in a factory-managed circle cannot create another circle until it leaves the current one. A wallet with no matching membership sees an empty dashboard and can create a new circle through the factory.
 
 ## Future Roadmap
 
 - **Scheduled automatic payouts** — trigger payout via a Stellar ledger time condition instead of requiring manual invocation.
-- **Multi-circle participation** — let a single wallet join multiple factory-managed circles from one dashboard.
 - **Circle invitations** — off-chain invite links that add a member's key to a pending circle before deployment.
-- **Push notifications** — webhook-driven alerts (contribution received, payout triggered, new cycle started) via the existing API layer.
+- **Background push notifications** — deliver alerts when the app is closed, beyond the current in-app browser notification support.
 - **Mobile-first PWA** — installable progressive web app with deep-link support for wallet signing flows.
-- **Contribution history export** — downloadable CSV of all cycle activity for a given circle.
 - **Mainnet support** — configuration toggle to switch from Testnet to Mainnet with appropriate safety warnings.
 
 ---
 
 ## Architecture
 
-Loop is split into two layers: a Next.js frontend and three Soroban smart contracts. They interact exclusively through signed Stellar transactions — no backend, no database. The factory records every created pool and registry pair in one on-chain list, while each circle keeps its own isolated state.
+Loop is split into two layers: a Next.js frontend and three Soroban smart contracts. They interact exclusively through signed Stellar transactions — no backend, no database. The factory records every created pool and registry pair in one on-chain list. Each circle has its own isolated pool and member-registry contracts.
 
 ### Frontend
 
