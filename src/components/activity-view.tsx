@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useCircle } from "@/lib/circle-context";
+import { Transaction, useCircle } from "@/lib/circle-context";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Coins,
@@ -10,6 +10,8 @@ import {
   ArrowRightLeft,
   Clock,
   ArrowUpRight,
+  Download,
+  Bell,
 } from "lucide-react";
 
 const S = {
@@ -29,6 +31,16 @@ const S = {
   error: "oklch(65% 0.16 20)",
 };
 
+function downloadCsv(transactions: Transaction[]) {
+  const q = String.fromCharCode(34);
+  const escape = (value: string | number) => q + String(value).replaceAll(q, q + q) + q;
+  const rows = [["Type", "Member", "Amount (XLM)", "Cycle", "Timestamp", "Transaction hash"], ...transactions.map((tx) => [tx.type, tx.member || "", tx.amount ?? "", tx.cycleId, new Date(tx.timestamp).toISOString(), tx.hash || ""])];
+  const csv = rows.map((row) => row.map(escape).join(",")).join(String.fromCharCode(10));
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url; link.download = "loop-contribution-history.csv"; link.click();
+  URL.revokeObjectURL(url);
+}
 function formatAddress(addr: string, currentUser?: string) {
   if (addr === currentUser) return "You";
   if (!addr) return "—";
@@ -53,10 +65,32 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
 
 export function ActivityView() {
   const { publicKey, loading, transactions } = useCircle();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const lastNotified = useRef("");
   const [view, setView] = useState<"all" | "mine">("all");
   const visibleTransactions = view === "mine"
     ? transactions.filter((tx) => tx.member === publicKey)
     : transactions;
+  useEffect(() => {
+    const latest = transactions[0];
+    if (!latest || lastNotified.current === latest.id) return;
+    lastNotified.current = latest.id;
+    if (notificationsEnabled && "Notification" in window && Notification.permission === "granted") {
+      new Notification("Loop activity", { body: latest.type + " confirmed on the circle" });
+    }
+  }, [transactions, notificationsEnabled]);
+
+  useEffect(() => {
+    setNotificationsEnabled(localStorage.getItem("loop-notifications") === "enabled");
+  }, []);
+
+  const enableNotifications = async () => {
+    if (!("Notification" in window)) return;
+    const permission = await Notification.requestPermission();
+    const enabled = permission === "granted";
+    setNotificationsEnabled(enabled);
+    localStorage.setItem("loop-notifications", enabled ? "enabled" : "disabled");
+  };
 
   if (!publicKey) {
     return (
@@ -118,12 +152,14 @@ export function ActivityView() {
             <Clock className="w-4 h-4" style={{ color: S.accent }} />
             <div className="flex items-center justify-between gap-3 w-full">
               <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: S.text3 }}>Contract Activity Log</p>
+              <button onClick={enableNotifications} className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] uppercase tracking-widest cursor-pointer" style={{ color: notificationsEnabled ? S.success : S.text2, border: `1px solid ${S.border}`, borderRadius: "2px" }}><Bell className="w-3 h-3" /> {notificationsEnabled ? "Notifications on" : "Notify me"}</button>
               <div className="flex gap-1">
                 <button onClick={() => setView("all")} className="px-2.5 py-1 text-[10px] uppercase tracking-widest cursor-pointer" style={{ color: view === "all" ? S.accent : S.text3, background: view === "all" ? S.accentBg : "transparent", border: `1px solid `, borderRadius: "2px" }}>All Activity</button>
                 <button onClick={() => setView("mine")} className="px-2.5 py-1 text-[10px] uppercase tracking-widest cursor-pointer" style={{ color: view === "mine" ? S.accent : S.text3, background: view === "mine" ? S.accentBg : "transparent", border: `1px solid `, borderRadius: "2px" }}>My Activity</button>
               </div>
             </div>
           </div>
+              <button onClick={() => downloadCsv(visibleTransactions)} disabled={visibleTransactions.length === 0} className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] uppercase tracking-widest cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" style={{ color: S.text2, border: `1px solid ${S.border}`, borderRadius: "2px" }}><Download className="w-3 h-3" /> CSV</button>
           <div className="p-3 overflow-y-auto">
             <AnimatePresence initial={false}>
               {visibleTransactions.length === 0 ? (
