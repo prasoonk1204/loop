@@ -310,6 +310,25 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section id="faq" className="border-t border-white/10 bg-[#0d0d0d]">
+        <div className="max-w-4xl mx-auto px-6 md:px-10 py-24">
+          <p className="text-[11px] uppercase tracking-widest font-medium mb-4" style={{ color: T.gold }}>FAQ</p>
+          <h2 className="text-3xl font-light mb-12" style={{ color: T.text1 }}>Common questions</h2>
+          <div className="grid gap-8 md:grid-cols-2">
+            {[
+              ["What is Loop?", "Loop is a group savings circle powered by Stellar smart contracts."],
+              ["Do I need a wallet?", "Yes. Connect a supported Stellar wallet to create circles and sign contributions."],
+              ["What happens if someone misses a payment?", "The cycle stays locked until every member contributes. The contract does not release a partial payout."],
+              ["Can I see my transactions?", "Yes. Open Activity, switch to My Activity, or download the visible history as a CSV."],
+            ].map(([question, answer]) => (
+              <div key={question} className="border-b border-white/10 pb-6">
+                <h3 className="text-sm font-medium mb-2" style={{ color: T.text1 }}>{question}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: T.text2 }}>{answer}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
       {/* ── Roadmap ───────────────────────────────────────────── */}
       <section id="roadmap" style={{ borderTop: `1px solid ${T.line}`, background: T.bg }}>
         <div className="max-w-6xl mx-auto px-6 md:px-10 py-24">
