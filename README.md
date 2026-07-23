@@ -171,9 +171,9 @@ Browser
 | Explain what happens when a member misses a contribution. | Added contract behavior: payout stays locked; leave and delete refund rules are explained. | [`0b79a06`](https://github.com/prasoonk1204/loop/commit/0b79a06f3a0a4e80e4cc4e53c56b4c5e135f2d9c) | `GCRZFG2VFVFRP5454SMUETCNXHWI2DIMVTPF7YAHCCKQTVV64VXLEAIO` |
 | Make wallet addresses easier to identify. | Personal addresses display as You in activity entries. | [`eecf8f3`](https://github.com/prasoonk1204/loop/commit/eecf8f3b8ee25b253cd69145c8d66d3169559d56) | `GB4V5ANXTDQE456WI7OXRNNAQWITV5KVWSVJVFQD3PKYVOUYIIYL7SQH` |
 | Form errors are easy to miss. | Added inline field and form validation messages on circle creation. | [`cbc0908`](https://github.com/prasoonk1204/loop/commit/cbc0908ab6e7006d0b694d0f67141661028a35fb) | `GD5CKSKAABYTZGYN3GDC43MSR3ER6TUOBSHPJYLRCNLSZGKYUGSK5YDZ` |
-| Add retry buttons when blockchain data fails to load. | Added a Try again action when dashboard Soroban reads fail. | [`0b79a06`](https://github.com/prasoonk1204/loop/commit/0b79a06f3a0e4e80e4cc4e53c56b4c5e135f2d9c) | `GD2CBSXPJQZQBEVEF5ZQ5A35RHIULD2R4AA2A2WT732ERUKZ33PWILCZ` |
+| Add retry buttons when blockchain data fails to load. | Added a Try again action when dashboard Soroban reads fail. | [`0b79a06`](https://github.com/prasoonk1204/loop/commit/0b79a06f3a0a4e80e4cc4e53c56b4c5e135f2d9c) | `GD2CBSXPJQZQBEVEF5ZQ5A35RHIULD2R4AA2A2WT732ERUKZ33PWILCZ` |
 | Dialogs feel disconnected from the page. | Added consistent confirmation dialog for leaving or deleting a circle. | [`e50ddfa`](https://github.com/prasoonk1204/loop/commit/e50ddfa0c7d6990d27a037ace250b3b1b9a05a5f) | `GCDWNIMNSJZYYDYPLTQRWLUWZ3PIARX6A4FILC3R5EU2APZNBDSQKO32` |
-| Empty pages do not tell me what to do next. | Added next-step buttons for empty contract and personal activity views. | [`0b79a06`](https://github.com/prasoonk1204/loop/commit/0b79a06f3a0e4e80e4cc4e53c56b4c5e135f2d9c) | `GCDF44RPW43IMGGHTHDQS5UAUOYPR2QK3WGNROIAO2FECSAEPFFMWMCA` |
+| Empty pages do not tell me what to do next. | Added next-step buttons for empty contract and personal activity views. | [`0b79a06`](https://github.com/prasoonk1204/loop/commit/0b79a06f3a0a4e80e4cc4e53c56b4c5e135f2d9c) | `GCDF44RPW43IMGGHTHDQS5UAUOYPR2QK3WGNROIAO2FECSAEPFFMWMCA` |
 
 ### Feedback Summary
 

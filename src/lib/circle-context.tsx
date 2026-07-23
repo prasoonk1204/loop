@@ -424,11 +424,6 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
   };
 
 
-  useEffect(() => {
-    if (state.publicKey) void discoverWalletCircle(state.publicKey);
-  }, [state.publicKey]);
-
-
   const disconnect = () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("stellar-loop-pubkey");
@@ -498,6 +493,10 @@ export function CircleProvider({ children }: { children: React.ReactNode }) {
     }
     setState((prev) => ({ ...prev, poolContractId: "", registryContractId: "", members: [], contributionAmount: 0, cycleLength: 0, currentCycle: 0, contributedThisCycle: [], nextPayoutRecipient: "", transactions: [], loading: false }));
   }, [state.factoryContractId, readContract, fetchCircleState]);
+
+  useEffect(() => {
+    if (state.publicKey) void discoverWalletCircle(state.publicKey);
+  }, [state.publicKey, discoverWalletCircle]);
 
 
   const createCircle = async (members: string[], amount: number, length: number) => {
