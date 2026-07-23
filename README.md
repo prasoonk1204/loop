@@ -10,6 +10,7 @@ Loop is a trustless ROSCA (Rotating Savings and Credit Association) platform bui
 - [Features](#features)
 - [Future Roadmap](#future-roadmap)
 - [Architecture](#architecture)
+- [User Feedback Implemented](#user-feedback-implemented)
 - [Installation & Local Setup](#installation--local-setup)
 - [Smart Contract Development](#smart-contract-development)
 - [CI/CD](#cicd)
@@ -33,7 +34,7 @@ Loop is a trustless ROSCA (Rotating Savings and Credit Association) platform bui
 
 ## Screenshots
 
-### Home
+### Landing
 
 ![Home](public/screenshots/home.png)
 
@@ -45,7 +46,7 @@ Loop is a trustless ROSCA (Rotating Savings and Credit Association) platform bui
 
 ![Create Circle](public/screenshots/create-circle.png)
 
-### Mobile
+### Mobile Responsiveness
 
 <table>
   <tr>
@@ -54,11 +55,15 @@ Loop is a trustless ROSCA (Rotating Savings and Credit Association) platform bui
   </tr>
 </table>
 
+### Analytics Dashboard
+
+![Analytics](public/screenshots/analytics.png)
+
 ### Testnet Transaction
 
 ![Testnet Transaction](public/screenshots/testnet.png)
 
-### Vitest
+### Tests passing
 
 ![Vitest](public/screenshots/tests.png)
 
@@ -157,18 +162,22 @@ Browser
 
 ## User Feedback Implemented
 
-| Feedback | Change |
-|---|---|
-| Improve mobile responsiveness. | Reduced mobile page padding, kept controls flexible, and improved small-screen layouts. |
-| Add onboarding guidance for first-time wallet users. | Added three-step guidance to the disconnected dashboard state. |
-| I cannot see my personal contributions. | Added All Activity and My Activity tabs with wallet-specific filtering. |
-| Show clearer transaction status while creating a circle. | Added inline creating status while wallet requests and on-chain confirmations complete. |
-| Explain what happens when a member misses a contribution. | Added current contract behavior: payout stays locked; leave and delete refund rules are explained. |
-| Make wallet addresses easier to identify. | Personal addresses now display as You in activity entries. |
-| Form errors are easy to miss. | Added inline field and form validation messages on circle creation. |
-| Add retry buttons when blockchain data fails to load. | Added a Try again action when dashboard Soroban reads fail. |
-| Dialogs feel disconnected from the page. | Added a consistent confirmation dialog for leaving or deleting a circle. |
-| Empty pages do not tell me what to do next. | Added next-step buttons for empty contract and personal activity views. |
+| Feedback | Change | Commit | Representative wallet evidence |
+|---|---|---|---|
+| Improve mobile responsiveness. | Reduced mobile page padding, kept controls flexible, and improved small-screen layouts. | [`e50ddfa`](https://github.com/prasoonk1204/loop/commit/e50ddfa0c7d6990d27a037ace250b3b1b9a05a5f) | `GCGCFF3YNWZYAUP2KULVPNALTBQKQGBDQHOBSLJRV2F5JOAIOSDGWM2L` |
+| Add onboarding guidance for first-time wallet users. | Added three-step guidance to disconnected dashboard state. | [`e50ddfa`](https://github.com/prasoonk1204/loop/commit/e50ddfa0c7d6990d27a037ace250b3b1b9a05a5f) | `GBZOOB75QVA2S2FWMJDWIYDQPXF6TKL5OJKMEIR3MVNQ5RFKLKJBCSFN` |
+| I cannot see my personal contributions. | Added All Activity and My Activity tabs with wallet-specific filtering. | [`eecf8f3`](https://github.com/prasoonk1204/loop/commit/eecf8f3b8ee25b253cd69145c8d66d3169559d56) | `GBSPA4R3LLIWZZOV4LJ6GBKD6GPNCUCNTCIP5FKAUHFO5N6SKWUKDEDI` |
+| Show clearer transaction status while creating a circle. | Added inline creating status while wallet requests and on-chain confirmations complete. | [`cbc0908`](https://github.com/prasoonk1204/loop/commit/cbc0908ab6e7006d0b694d0f67141661028a35fb) | `GBAQYA36CPBOJAETSSAXRYYXYUHTC3EXZ5R4Z2NPWXO7WGC7O4WBQOJ6` |
+| Explain what happens when a member misses a contribution. | Added contract behavior: payout stays locked; leave and delete refund rules are explained. | [`0b79a06`](https://github.com/prasoonk1204/loop/commit/0b79a06f3a0a4e80e4cc4e53c56b4c5e135f2d9c) | `GCRZFG2VFVFRP5454SMUETCNXHWI2DIMVTPF7YAHCCKQTVV64VXLEAIO` |
+| Make wallet addresses easier to identify. | Personal addresses display as You in activity entries. | [`eecf8f3`](https://github.com/prasoonk1204/loop/commit/eecf8f3b8ee25b253cd69145c8d66d3169559d56) | `GB4V5ANXTDQE456WI7OXRNNAQWITV5KVWSVJVFQD3PKYVOUYIIYL7SQH` |
+| Form errors are easy to miss. | Added inline field and form validation messages on circle creation. | [`cbc0908`](https://github.com/prasoonk1204/loop/commit/cbc0908ab6e7006d0b694d0f67141661028a35fb) | `GD5CKSKAABYTZGYN3GDC43MSR3ER6TUOBSHPJYLRCNLSZGKYUGSK5YDZ` |
+| Add retry buttons when blockchain data fails to load. | Added a Try again action when dashboard Soroban reads fail. | [`0b79a06`](https://github.com/prasoonk1204/loop/commit/0b79a06f3a0e4e80e4cc4e53c56b4c5e135f2d9c) | `GD2CBSXPJQZQBEVEF5ZQ5A35RHIULD2R4AA2A2WT732ERUKZ33PWILCZ` |
+| Dialogs feel disconnected from the page. | Added consistent confirmation dialog for leaving or deleting a circle. | [`e50ddfa`](https://github.com/prasoonk1204/loop/commit/e50ddfa0c7d6990d27a037ace250b3b1b9a05a5f) | `GCDWNIMNSJZYYDYPLTQRWLUWZ3PIARX6A4FILC3R5EU2APZNBDSQKO32` |
+| Empty pages do not tell me what to do next. | Added next-step buttons for empty contract and personal activity views. | [`0b79a06`](https://github.com/prasoonk1204/loop/commit/0b79a06f3a0e4e80e4cc4e53c56b4c5e135f2d9c) | `GCDF44RPW43IMGGHTHDQS5UAUOYPR2QK3WGNROIAO2FECSAEPFFMWMCA` |
+
+### Feedback Summary
+
+Feedback focused mostly on clarity and confidence during wallet and contract interactions. Users wanted better mobile support, clearer onboarding, personal contribution history, and clearer loading and transaction states. They also asked for better missed-payment explanations, easier wallet identification, useful empty states, retry actions, and consistent dialogs. These changes were implemented and checked against wallet activity on Stellar testnet.
 
 ---
 
@@ -202,8 +211,7 @@ NEXT_PUBLIC_STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
 NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE=Test SDF Network ; September 2015
 NEXT_PUBLIC_STELLAR_RPC_URL=https://soroban-testnet.stellar.org/
 
-NEXT_PUBLIC_SOROBAN_POOL_CONTRACT_ID=<your pool contract ID>
-NEXT_PUBLIC_SOROBAN_REGISTRY_CONTRACT_ID=<your registry contract ID>
+NEXT_PUBLIC_SOROBAN_FACTORY_CONTRACT_ID=<your circle factory contract ID>
 NEXT_PUBLIC_SOROBAN_TOKEN_CONTRACT_ID=<your SAC token contract ID>
 ```
 
